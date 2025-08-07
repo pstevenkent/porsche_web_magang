@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Definisi Font Face (tetap sama) --- */
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-BoldItalic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'PorscheNext';
+  src: url('./fonts/PorscheNext-ThinItalic.otf') format('opentype');
+  font-weight: 100;
+  font-style: italic;
+}
+
+/* --- Gaya Dasar Body --- */
+body {
+  @apply font-porsche antialiased;
+  background-color: #000000; /* Fallback jika gambar tidak termuat */
+}
+
+/* --- Gaya untuk Carousel Latar Belakang --- */
+.background-carousel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2; /* Taruh di paling belakang */
+}
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 1.5s ease-in-out; /* Transisi fade yang mulus */
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.25); /* Lapisan gelap agar teks lebih mudah dibaca */
+  z-index: -1;
+}
+
+/* --- Wadah Aplikasi Utama dengan Efek Transparan --- */
+.app-container {
+  background-color: rgba(255, 255, 255, 0.60); /* Warna putih dengan opasitas 85% */
+  backdrop-filter: blur(10px); /* Efek kaca buram (frosted glass) */
+  -webkit-backdrop-filter: blur(10px); /* Dukungan untuk Safari */
+}
+
+/* --- Animasi Loader (tetap sama) --- */
+.loader {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #c40000;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
