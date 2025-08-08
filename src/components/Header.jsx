@@ -11,10 +11,12 @@ function Header({ page, setPage }) {
     <header className="flex justify-between items-center w-full py-4 border-b border-porscheGray">
       {/* Kiri */}
       <div className="flex-1 text-left">
-         <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
-           CSV UTILITY
-         </h1>
-         <p className="text-xs text-porscheGray-dark -mt-1">The Media Portal by Porsche Interns</p>
+        <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
+          CSV UTILITY
+        </h1>
+        <p className="text-xs text-porscheGray-dark -mt-1">
+          The Media Portal by Porsche Interns
+        </p>
       </div>
 
       {/* Tengah (Logo Porsche) */}
@@ -38,7 +40,9 @@ function Header({ page, setPage }) {
           {/* </button>
         <button
           onClick={() => setPage("banding")}
-          className={`${navLinkBaseStyles} ${page === "banding" ? activeLinkStyles : inactiveLinkStyles}`}
+          className={`${navLinkBaseStyles} ${
+            page === "banding" ? activeLinkStyles : inactiveLinkStyles
+          }`}
         >
           Porsche Centre Surabaya */}
         </button>
