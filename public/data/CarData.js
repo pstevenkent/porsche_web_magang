@@ -25,7 +25,7 @@ export const carData = {
     ]
   };
   
-  // --- Data Halaman Konfigurator ---
+  // --- Data Halaman Konfigurator. ---
   export const configuratorDetails = {
       name: "Macan",
       year: "2025",
