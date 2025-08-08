@@ -24,6 +24,12 @@ function Header({ page, setPage }) {
           className={`${navLinkBaseStyles} ${page === "baca" ? activeLinkStyles : inactiveLinkStyles}`}
         >
           View CSV
+          {/* </button>
+        <button
+          onClick={() => setPage("banding")}
+          className={`${navLinkBaseStyles} ${page === "banding" ? activeLinkStyles : inactiveLinkStyles}`}
+        >
+          Porsche Centre Surabaya */}
         </button>
         <button
           onClick={() => setPage("banding")}
@@ -32,8 +38,8 @@ function Header({ page, setPage }) {
           Compare CSV
         </button>
         <button
-          onClick={() => setPage("history")}
-          className={`${navLinkBaseStyles} ${page === "history" ? activeLinkStyles : inactiveLinkStyles}`}
+          onClick={() => setPage("viewcatalogue")}
+          className={`${navLinkBaseStyles} ${page === "viewcatalogue" ? activeLinkStyles : inactiveLinkStyles}`}
         >
           View Catalogue
         </button>
