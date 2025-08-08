@@ -8,10 +8,10 @@ function Header({ page, setPage }) {
   return (
     <header className="flex justify-between items-center w-full py-4 border-b border-porscheGray">
       <div className="flex-1 text-left">
-         <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
-           CSV UTILITY
-         </h1>
-         <p className="text-xs text-porscheGray-dark -mt-1">The Media Portal by Porsche Interns</p>
+        <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
+          CSV UTILITY
+        </h1>
+        <p className="text-xs text-porscheGray-dark -mt-1">The Media Portal by Porsche Interns</p>
       </div>
       <div className="flex-shrink-0 hidden md:block">
         <div className="font-porsche text-4xl font-bold tracking-[0.25em] text-porscheBlack">
@@ -23,13 +23,19 @@ function Header({ page, setPage }) {
           onClick={() => setPage("baca")}
           className={`${navLinkBaseStyles} ${page === "baca" ? activeLinkStyles : inactiveLinkStyles}`}
         >
-          Baca CSV
+          View CSV
         </button>
         <button
           onClick={() => setPage("banding")}
           className={`${navLinkBaseStyles} ${page === "banding" ? activeLinkStyles : inactiveLinkStyles}`}
         >
-          Bandingkan CSV
+          Compare CSV
+        </button>
+        <button
+          onClick={() => setPage("history")}
+          className={`${navLinkBaseStyles} ${page === "history" ? activeLinkStyles : inactiveLinkStyles}`}
+        >
+          View Catalogue
         </button>
         <button
           onClick={() => setPage("history")}
