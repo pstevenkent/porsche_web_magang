@@ -7,7 +7,7 @@ export const carData = {
       { id: 2, name: "718 Boxster", price: "Rp 3.100.000.000", image: "/images/cars/718-boxster.png" },
     ],
     "911": [
-      { id: 3, name: "911 Carrera Coupe", price: "Rp 5.300.000.000", image: "/images/cars/911Carrera.webp" },
+      { id: 3, name: "911 Carrera Coupe", price: "Rp 5.300.000.000", image: "/images/cars/911Carrera.jpg" },
       { id: 4, name: "911 Carrera Cabriolet", price: "Rp 6.100.000.000", image: "/images/cars/911-carreracabriolet.png" },
     ],
     "Taycan": [
