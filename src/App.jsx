@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import Header from './components/Header';
+import Header from './components/header';
 import ReadCSVPage from './pages/ReadCSVPage';
-import CompareCSVPage from './pages/CompareCSVPage';
+import CompareCSVPage from './pages/comparecsvpage';
 import HistoryPage from './pages/HistoryPage';
 import CataloguePage from './pages/CataloguePage';
 import ConfiguratorPage from './pages/ConfiguratorPage';
+import AddProductPage from './pages/AddProductPage'; // <-- Impor halaman baru
 import BackgroundCarousel from './components/BackgroundCarousel';
 import './index.css';
 
@@ -28,7 +29,6 @@ export default function App() {
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
         <main className="app-container w-full max-w-7xl p-6 sm:p-8 rounded-xl shadow-lg">
           
-          {/* Header sekarang selalu ditampilkan */}
           <Header page={page} setPage={setPage} />
           
           <div className="mt-8">
@@ -37,6 +37,8 @@ export default function App() {
             {page === "history" && <HistoryPage />}
             {page === "viewcatalogue" && <CataloguePage onSelectCar={handleSelectCar} />}
             {page === "configurator" && <ConfiguratorPage car={selectedCar} onBack={handleBackToCatalogue} />}
+            {/* Tambahkan render kondisional untuk halaman baru */}
+            {page === "addproduct" && <AddProductPage />}
           </div>
 
         </main>

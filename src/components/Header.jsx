@@ -10,6 +10,7 @@ function Header({ page, setPage }) {
   return (
     <header className="flex justify-between items-center w-full py-4 border-b border-porscheGray">
       {/* Kiri */}
+
       <div className="flex-1 text-left">
         <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
           CSV UTILITY
@@ -17,7 +18,9 @@ function Header({ page, setPage }) {
         <p className="text-xs text-porscheGray-dark -mt-1">
           The Media Portal by Porsche Interns
         </p>
+        
       </div>
+      
 
       {/* Tengah (Logo Porsche) */}
       <div className="flex-shrink-0 hidden md:block">
@@ -59,14 +62,15 @@ function Header({ page, setPage }) {
           className={`${navLinkBaseStyles} ${page === "viewcatalogue" ? activeLinkStyles : inactiveLinkStyles}`}
         >
           View Catalogue
-        </button>
+          
+          </button>
+        {/* Tombol Baru Ditambahkan di Sini */}
         <button
-          onClick={() => setPage("history")}
-          className={`${navLinkBaseStyles} ${
-            page === "history" ? activeLinkStyles : inactiveLinkStyles
-          }`}
+          onClick={() => setPage("addproduct")}
+          className={`${navLinkBaseStyles} ${page === "addproduct" ? activeLinkStyles : inactiveLinkStyles}`}
         >
-          History
+          Add Product
+          
         </button>
       </div>
     </header>
