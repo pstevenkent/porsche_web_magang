@@ -18,9 +18,9 @@ function Header({ page, setPage }) {
         <p className="text-xs text-porscheGray-dark -mt-1">
           The Media Portal by Porsche Interns
         </p>
-        
+
       </div>
-      
+
 
       {/* Tengah (Logo Porsche) */}
       <div className="flex-shrink-0 hidden md:block">
@@ -35,9 +35,8 @@ function Header({ page, setPage }) {
       <div className="flex-1 flex justify-end items-center space-x-6">
         <button
           onClick={() => setPage("baca")}
-          className={`${navLinkBaseStyles} ${
-            page === "baca" ? activeLinkStyles : inactiveLinkStyles
-          }`}
+          className={`${navLinkBaseStyles} ${page === "baca" ? activeLinkStyles : inactiveLinkStyles
+            }`}
         >
           View CSV
           {/* </button>
@@ -51,9 +50,8 @@ function Header({ page, setPage }) {
         </button>
         <button
           onClick={() => setPage("banding")}
-          className={`${navLinkBaseStyles} ${
-            page === "banding" ? activeLinkStyles : inactiveLinkStyles
-          }`}
+          className={`${navLinkBaseStyles} ${page === "banding" ? activeLinkStyles : inactiveLinkStyles
+            }`}
         >
           Compare CSV
         </button>
@@ -62,15 +60,24 @@ function Header({ page, setPage }) {
           className={`${navLinkBaseStyles} ${page === "viewcatalogue" ? activeLinkStyles : inactiveLinkStyles}`}
         >
           View Catalogue
-          
-          </button>
+
+        </button>
+        <button
+          onClick={() => setPage("manageproducts")}
+          className={`${navLinkBaseStyles} ${page === "manageproducts" ? activeLinkStyles : inactiveLinkStyles}`}
+        >
+          Manage Products
+
+        </button>
         {/* Tombol Baru Ditambahkan di Sini */}
         <button
           onClick={() => setPage("addproduct")}
           className={`${navLinkBaseStyles} ${page === "addproduct" ? activeLinkStyles : inactiveLinkStyles}`}
         >
           Add Product
-          
+
+
+
         </button>
       </div>
     </header>
