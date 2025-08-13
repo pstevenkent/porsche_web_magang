@@ -10,6 +10,7 @@ export default function ManageProductsPage({ onEdit }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  // Fungsi untuk mengambil data mobil dari backend
   const fetchCars = async () => {
     setLoading(true);
     setError('');
@@ -28,10 +29,12 @@ export default function ManageProductsPage({ onEdit }) {
     }
   };
 
+  // Ambil data saat komponen pertama kali dimuat
   useEffect(() => {
     fetchCars();
   }, []);
 
+  // Fungsi untuk menangani penghapusan produk
   const handleDelete = async (carId, carName) => {
     if (!window.confirm(`Apakah Anda yakin ingin menghapus ${carName}?`)) {
       return;
@@ -47,7 +50,7 @@ export default function ManageProductsPage({ onEdit }) {
         throw new Error(result.message || 'Gagal menghapus produk.');
       }
       setMessage(`Berhasil menghapus ${carName}.`);
-      fetchCars();
+      fetchCars(); // Muat ulang daftar mobil setelah berhasil dihapus
     } catch (err) {
       setError(err.message);
     }

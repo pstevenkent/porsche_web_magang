@@ -14,6 +14,7 @@ export default function AddProductForm({ initialData, onSave }) {
   const initialFormState = {
     images: [''], vehicle: '', modelyear: '', exteriorcolour: '', interiorcolours: '',
     wheels: '', seats: '', rooftransport: '', powertrainperformance: [''], infotainment: '',
+    commnr: '', price: '',
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -35,6 +36,8 @@ export default function AddProductForm({ initialData, onSave }) {
         powertrainperformance: initialData.powertrainperformance && initialData.powertrainperformance.length > 0 ? initialData.powertrainperformance : [''],
         infotainment: initialData.infotainment || '',
         images: initialData.images || [],
+        commnr: initialData.commnr || '',
+        price: initialData.price || '',
       });
     }
   }, [initialData, isEditMode]);
@@ -80,6 +83,9 @@ export default function AddProductForm({ initialData, onSave }) {
     data.append('seats', formData.seats);
     data.append('rooftransport', formData.rooftransport);
     data.append('infotainment', formData.infotainment);
+    data.append('commnr', formData.commnr);
+    data.append('price', parseInt(formData.price, 10) || 0);
+    
     formData.powertrainperformance.filter(p => p.trim() !== '').forEach(p => {
         data.append('powertrainperformance', p);
     });
@@ -90,10 +96,7 @@ export default function AddProductForm({ initialData, onSave }) {
         });
     }
 
-    const url = isEditMode
-      ? `http://localhost:8080/api/v1/cars/${initialData.id}`
-      : 'http://localhost:8080/api/v1/cars';
-    
+    const url = isEditMode ? `http://localhost:8080/api/v1/cars/${initialData.id}` : 'http://localhost:8080/api/v1/cars';
     const method = isEditMode ? 'PATCH' : 'POST';
 
     try {
@@ -102,7 +105,6 @@ export default function AddProductForm({ initialData, onSave }) {
       if (!response.ok || result.status !== 'success') {
         throw new Error(result.message || `Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} produk.`);
       }
-      
       setMessage(`Sukses! Produk berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}.`);
       if (!isEditMode) {
         setFormData(initialFormState);
@@ -110,7 +112,6 @@ export default function AddProductForm({ initialData, onSave }) {
         imageUploadKey.current += 1;
       }
       if (onSave) onSave();
-
     } catch (error) {
       setMessage(`Error: ${error.message}`);
     } finally {
@@ -121,19 +122,11 @@ export default function AddProductForm({ initialData, onSave }) {
   return (
     <div className="font-porsche text-porscheBlack">
       <header className="mb-10 text-center">
-        <h1 className="text-3xl font-bold uppercase tracking-wider sm:text-4xl">
-          {isEditMode ? 'Edit Vehicle' : 'Add New Vehicle'}
-        </h1>
-        <p className="mt-2 text-lg text-porscheGray-dark">
-          {isEditMode ? `Mengedit konfigurasi untuk ${initialData.vehicle}` : 'Isi detail untuk konfigurasi mobil baru.'}
-        </p>
+        <h1 className="text-3xl font-bold uppercase tracking-wider sm:text-4xl">{isEditMode ? 'Edit Vehicle' : 'Add New Vehicle'}</h1>
+        <p className="mt-2 text-lg text-porscheGray-dark">{isEditMode ? `Mengedit konfigurasi untuk ${initialData.vehicle}` : 'Isi detail untuk konfigurasi mobil baru.'}</p>
       </header>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <ImageUpload 
-            key={imageUploadKey.current} 
-            onFilesChange={handleFilesChange} 
-            initialPreviews={isEditMode ? formData.images : []}
-        />
+        <ImageUpload key={imageUploadKey.current} onFilesChange={handleFilesChange} initialPreviews={isEditMode ? formData.images : []} />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
                 <label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label>
@@ -142,6 +135,16 @@ export default function AddProductForm({ initialData, onSave }) {
             <div>
                 <label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label>
                 <input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required />
+            </div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+                <label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label>
+                <input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" placeholder="e.g., ABC12345" required />
+            </div>
+            <div>
+                <label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label>
+                <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" placeholder="e.g., 3000000000" required />
             </div>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
