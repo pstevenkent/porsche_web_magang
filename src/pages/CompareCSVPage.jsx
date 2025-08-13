@@ -94,7 +94,8 @@ function CompareCSVPage() { // Pastikan nama fungsi ini adalah CompareCSVPage
           value={keys}
           onChange={(e) => setKeys(e.target.value)}
         />
-         <p className="text-xs text-gray-400 mt-1">Jika kosong, semua kolom akan digunakan sebagai kunci.</p>
+        <p className="text-xs text-red-800 mt-1">Jika kosong, semua kolom akan digunakan sebagai kunci.</p>
+
       </div>
       <button onClick={parseAndCompare} className="bg-porscheBlack text-white px-8 py-3 rounded-md hover:bg-porscheGray-dark transition-colors font-bold">
         Bandingkan CSV

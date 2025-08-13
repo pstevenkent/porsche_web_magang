@@ -18,5 +18,5 @@ function CarCard({ car, onSelect }) {
     </div>
   );
 }
-// .
+
 export default CarCard;
