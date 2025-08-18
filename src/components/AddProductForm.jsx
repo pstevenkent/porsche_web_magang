@@ -30,7 +30,9 @@ export default function AddProductForm({ initialData, onSave }) {
   const isEditMode = Boolean(initialData);
 
   const initialFormState = {
-    preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "", paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "",
+    preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
+    // Pastikan semua field baru ada di state awal
+    paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "",
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -41,9 +43,14 @@ export default function AddProductForm({ initialData, onSave }) {
   const previewUploadKey = useRef(0);
   const imagesUploadKey = useRef(1);
 
+  // --- PERBAIKAN UTAMA DI SINI ---
   useEffect(() => {
     if (isEditMode && initialData) {
+      // Gabungkan state awal dengan data yang ada untuk memastikan semua field terdefinisi
       const mergedData = { ...initialFormState, ...initialData };
+
+      // Pastikan field array memiliki setidaknya satu string kosong jika datanya kosong
+      // Ini penting agar input field tetap muncul meskipun datanya tidak ada
       ['powertrainperformance', 'exteriordesign', 'interiordesign', 'comfortnusability', 'lightsvision'].forEach(field => {
         if (!mergedData[field] || mergedData[field].length === 0) {
           mergedData[field] = [''];
@@ -52,6 +59,7 @@ export default function AddProductForm({ initialData, onSave }) {
       setFormData(mergedData);
     }
   }, [initialData, isEditMode]);
+  // --- AKHIR PERBAIKAN ---
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -149,7 +157,7 @@ export default function AddProductForm({ initialData, onSave }) {
     <div>
       <label className="mb-2 block text-sm font-bold text-porscheGray-dark">{title}</label>
       <div className="space-y-3">
-        {formData[fieldName].map((item, index) => (
+        {formData[fieldName]?.map((item, index) => (
           <DynamicInputField key={index} value={item} onChange={(e) => handleDynamicChange(e, index, fieldName)} onRemove={() => handleRemoveItem(index, fieldName)} />
         ))}
       </div>
@@ -199,13 +207,10 @@ export default function AddProductForm({ initialData, onSave }) {
                 <div><label htmlFor="paintedwheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Painted Wheels</label><input type="text" id="paintedwheels" name="paintedwheels" value={formData.paintedwheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
                 <div><label htmlFor="letteringdecals" className="mb-2 block text-sm font-bold text-porscheGray-dark">Lettering & Decals</label><input type="text" id="letteringdecals" name="letteringdecals" value={formData.letteringdecals} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
             </div>
-
-            {/* --- PERUBAHAN DI SINI --- */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
                 <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
             </div>
-            {/* --- AKHIR PERUBAHAN --- */}
             
             <DynamicSection title="Exterior Design" fieldName="exteriordesign"/>
             <DynamicSection title="Interior Design" fieldName="interiordesign"/>
@@ -215,7 +220,7 @@ export default function AddProductForm({ initialData, onSave }) {
         </div>
 
         <div className="border-t border-porscheGray pt-6">
-          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-porscheRed py-4 text-lg font-bold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-500">
+          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-porscheRed py-4 text-lg font-bold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-porscheGray-500">
             {isLoading ? "Menyimpan..." : isEditMode ? "Update Configuration" : "Save Configuration"}
           </button>
           {message && (<p className={`mt-4 text-center text-sm font-bold ${message.startsWith("Error") ? "text-red-500" : "text-green-500"}`}>{message}</p>)}
