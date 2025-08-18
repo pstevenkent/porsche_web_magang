@@ -1,87 +1,53 @@
 import React from 'react';
 
-function Header({ page, setPage }) {
-  const navLinkBaseStyles =
-    "font-bold text-sm uppercase tracking-wider transition-colors duration-300 pb-1";
-  const activeLinkStyles = "text-porscheRed border-b-2 border-porscheRed";
-  const inactiveLinkStyles =
-    "text-porscheGray-dark hover:text-porscheBlack border-b-2 border-transparent";
+// Komponen untuk setiap tombol navigasi
+const NavButton = ({ children, onClick, isActive }) => (
+  <button
+    onClick={onClick}
+    // Ukuran font dan padding dikembalikan ke ukuran semula
+    className={`px-4 py-2 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-300 ${
+      isActive
+        ? 'bg-porscheRed text-white shadow-md'
+        : 'text-black hover:bg-white/80'
+    }`}
+  >
+    {children}
+  </button>
+);
 
+export default function Header({ page, setPage }) {
   return (
-    <header className="flex justify-between items-center w-full py-4 border-b border-porscheGray">
-      {/* Kiri */}
+    <header className="w-full backdrop-blur-sm p-7 rounded-t-xl">
+      <div className="flex items-center justify-between">
+        
+        {/* Kolom Kiri: Judul (ukuran font dikembalikan) */}
+        <div className="text-left flex-shrink-0">
+        <img 
+            src="/images/Porsche_wordmark_black_rgb.png"
+            alt="Porsche Logo" 
+            className="h-5" // Tinggi logo tetap kecil
+          />
+        </div>
+        {/* Kolom Kanan: Tombol Navigasi (jarak antar tombol dikembalikan) */}
+        <nav className="flex items-center space-x-8">
+          <NavButton onClick={() => setPage('baca')} isActive={page === 'baca'}>
+            View CSV
+          </NavButton>
+          <NavButton onClick={() => setPage('banding')} isActive={page === 'banding'}>
+            Compare CSV
+          </NavButton>
+          <NavButton onClick={() => setPage('viewcatalogue')} isActive={page === 'viewcatalogue'}>
+            View Catalogue
+          </NavButton>
+          <NavButton onClick={() => setPage('manageproducts')} isActive={page === 'manageproducts'}>
+            Manage Products
+          </NavButton>
+          <NavButton onClick={() => setPage('addproduct')} isActive={page === 'addproduct'}>
+            Add Product
+          </NavButton>
+        </nav>
 
-      <div className="flex-1 text-left">
-        <h1 className="text-xl font-bold text-porscheBlack tracking-wide">
-          CSV UTILITY
-        </h1>
-        <p className="text-xs text-porscheGray-dark -mt-1">
-          The Media Portal by Porsche Interns
-        </p>
-
-      </div>
-
-
-      {/* Tengah (Logo Porsche) */}
-      <div className="flex-shrink-0 hidden md:block">
-        <img
-          src="/images/Porsche_wordmark_black_rgb.png"
-          alt="Porsche Logo"
-          className="h-4 w-auto object-contain"
-        />
-      </div>
-
-      {/* Kanan */}
-      <div className="flex-1 flex justify-end items-center space-x-6">
-        <button
-          onClick={() => setPage("baca")}
-          className={`${navLinkBaseStyles} ${page === "baca" ? activeLinkStyles : inactiveLinkStyles
-            }`}
-        >
-          View CSV
-          {/* </button>
-        <button
-          onClick={() => setPage("banding")}
-          className={`${navLinkBaseStyles} ${
-            page === "banding" ? activeLinkStyles : inactiveLinkStyles
-          }`}
-        >
-          Porsche Centre Surabaya */}
-        </button>
-        <button
-          onClick={() => setPage("banding")}
-          className={`${navLinkBaseStyles} ${page === "banding" ? activeLinkStyles : inactiveLinkStyles
-            }`}
-        >
-          Compare CSV
-        </button>
-        <button
-          onClick={() => setPage("viewcatalogue")}
-          className={`${navLinkBaseStyles} ${page === "viewcatalogue" ? activeLinkStyles : inactiveLinkStyles}`}
-        >
-          View Catalogue
-
-        </button>
-        <button
-          onClick={() => setPage("manageproducts")}
-          className={`${navLinkBaseStyles} ${page === "manageproducts" ? activeLinkStyles : inactiveLinkStyles}`}
-        >
-          Manage Products
-
-        </button>
-        {/* Tombol Baru Ditambahkan di Sini */}
-        <button
-          onClick={() => setPage("addproduct")}
-          className={`${navLinkBaseStyles} ${page === "addproduct" ? activeLinkStyles : inactiveLinkStyles}`}
-        >
-          Add Product
-
-
-
-        </button>
       </div>
     </header>
   );
 }
-
-export default Header;

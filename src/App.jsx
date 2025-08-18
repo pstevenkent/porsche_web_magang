@@ -4,11 +4,11 @@ import ReadCSVPage from './pages/ReadCSVPage';
 import CompareCSVPage from './pages/CompareCSVPage';
 import HistoryPage from './pages/HistoryPage';
 import CataloguePage from './pages/CataloguePage';
-import ConfiguratorPage from './pages/ConfiguratorPage';
+import DetailPage from './pages/DetailPage'; // <-- DIUBAH: Impor DetailPage
 import AddProductPage from './pages/AddProductPage';
 import ManageProductsPage from './pages/ManageProductsPage';
 import BackgroundCarousel from './components/BackgroundCarousel';
-import AddProductForm from './components/AddProductForm'; // Impor form secara langsung
+import AddProductForm from './components/AddProductForm';
 import './index.css';
 
 export default function App() {
@@ -18,7 +18,7 @@ export default function App() {
 
   const handleSelectCar = (car) => {
     setSelectedCar(car);
-    setPage('configurator');
+    setPage('detail'); // <-- DIUBAH: Arahkan ke halaman 'detail'
   };
 
   const handleBackToCatalogue = () => {
@@ -47,7 +47,11 @@ export default function App() {
             {page === "banding" && <CompareCSVPage />}
             {page === "history" && <HistoryPage />}
             {page === "viewcatalogue" && <CataloguePage onSelectCar={handleSelectCar} />}
-            {page === "configurator" && <ConfiguratorPage car={selectedCar} onBack={handleBackToCatalogue} />}
+            
+            {/* --- BAGIAN INI DIUBAH --- */}
+            {page === "detail" && <DetailPage car={selectedCar} onBack={handleBackToCatalogue} />}
+            {/* ------------------------- */}
+
             {page === "addproduct" && <AddProductPage />}
             {page === "manageproducts" && <ManageProductsPage onEdit={handleEditCar} />}
             {page === "editproduct" && (

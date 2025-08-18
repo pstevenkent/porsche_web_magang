@@ -30,7 +30,7 @@ export default function CarCard({ car, onSelect }) {
         <button 
           onClick={() => onSelect(car)}
           className="w-full mt-4 bg-porscheBlack text-white py-3 rounded-md font-bold text-sm uppercase tracking-wider group-hover:bg-porscheRed transition-colors duration-300">
-          Configure
+          See Details
         </button>
       </div>
     </div>
