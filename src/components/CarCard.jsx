@@ -26,7 +26,7 @@ export default function CarCard({ car, onSelect }) {
       </div>
       <div className="p-6">
         <h3 className="font-bold text-xl text-porscheBlack">{car.vehicle}</h3>
-        <p className="text-porscheGray-dark text-sm mt-1">Mulai dari {formattedPrice}</p>
+        <h1 className="text-porscheBlack text-sm mt-1 font-extrabold "> {formattedPrice}</h1>
         <button 
           onClick={() => onSelect(car)}
           className="w-full mt-4 bg-porscheBlack text-white py-3 rounded-md font-bold text-sm uppercase tracking-wider group-hover:bg-porscheRed transition-colors duration-300">
