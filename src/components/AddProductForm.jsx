@@ -31,7 +31,7 @@ export default function AddProductForm({ initialData, onSave }) {
 
   const initialFormState = {
     preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
-    // Pastikan semua field baru ada di state awal
+    // Pastikan semua field baru ada di state awalssss
     paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "",
   };
 
