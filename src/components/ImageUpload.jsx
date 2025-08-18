@@ -1,97 +1,71 @@
 import React, { useState, useCallback, useEffect } from 'react';
 
-// SVG Icon untuk area upload
-const UploadIcon = () => (
-  <svg className="mx-auto h-12 w-12 text-porscheGray-dark" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+// Komponen untuk menampilkan thumbnail
+const Thumbnail = ({ file }) => {
+  const [preview, setPreview] = useState(null);
 
-export default function ImageUpload({ onFilesChange, initialPreviews = [] }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [previews, setPreviews] = useState([]);
-
-  // Efek untuk menampilkan pratinjau awal saat dalam mode edit
   useEffect(() => {
-    // Hanya atur pratinjau awal jika ada dan berbeda dari yang sekarang
-    if (initialPreviews.length > 0 && JSON.stringify(initialPreviews) !== JSON.stringify(previews)) {
-        // Jika path gambar dari backend adalah lokal (misal: "./uploads/file.jpg"),
-        // kita perlu mengubahnya menjadi URL lengkap yang bisa diakses browser.
-        const fullUrlPreviews = initialPreviews.map(src => {
-            if (src.startsWith('./uploads')) {
-                return `http://localhost:8080${src.substring(1)}`; // Mengubah ./uploads -> /uploads
-            }
-            return src;
-        });
-        setPreviews(fullUrlPreviews);
+    // Cek jika 'file' adalah URL string (untuk initialPreviews)
+    if (typeof file === 'string') {
+      setPreview(file);
+      return;
     }
-  }, [initialPreviews]);
+    // Cek jika 'file' adalah objek File (untuk file baru)
+    if (file instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [file]);
 
-  // Fungsi untuk menangani file yang dipilih atau di-drop
-  const handleFiles = useCallback((files) => {
-    const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
-    
-    onFilesChange(imageFiles); // Kirim file yang valid ke komponen induk
+  return (
+    <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
+      <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+    </div>
+  );
+};
 
-    // Buat URL pratinjau lokal untuk file yang baru diunggah
-    const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
-    setPreviews(newPreviews);
+
+// Komponen Utama ImageUpload
+export default function ImageUpload({ onFilesChange, initialPreviews = [], multiple = false }) {
+  const [files, setFiles] = useState([]);
+
+  const handleFileChange = useCallback((event) => {
+    if (event.target.files) {
+      const selectedFiles = Array.from(event.target.files);
+      setFiles(selectedFiles);
+      onFilesChange(selectedFiles);
+    }
   }, [onFilesChange]);
-
-  const handleDragEnter = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
-  const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
-  const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-      e.dataTransfer.clearData();
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(e.target.files);
-    }
-  };
+  
+  // Gabungkan initialPreviews (URL) dan file baru untuk ditampilkan
+  const previews = initialPreviews.length > 0 && files.length === 0 ? initialPreviews : files;
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-porscheGray-dark">Images</label>
-      <div
-        onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
-        className={`flex justify-center rounded-lg border-2 border-dashed border-porscheGray px-6 py-10 transition-colors ${isDragging ? 'border-porscheRed bg-porscheGray-light' : 'bg-white'}`}
-      >
-        <div className="text-center">
-          <UploadIcon />
-          <div className="mt-4 flex text-sm leading-6 text-porscheGray-dark">
-            <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-porscheRed hover:text-red-700">
-              <span>Upload files</span>
-              <input id="file-upload" name="images" type="file" className="sr-only" multiple accept="image/png, image/jpeg" onChange={handleFileSelect} />
-            </label>
-            <p className="pl-1">or drag and drop</p>
-          </div>
-          <p className="text-xs leading-5 text-porscheGray-dark">PNG, JPG up to 10MB</p>
-        </div>
+      <div className="flex h-32 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-porscheGray transition hover:border-porscheRed hover:bg-porscheGray-light">
+        <label htmlFor={`file-upload-${multiple ? 'multi' : 'single'}`} className="flex cursor-pointer flex-col items-center">
+          <svg className="h-8 w-8 text-porscheGray-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+          <span className="mt-2 text-sm text-porscheBlack">Upload files or drag and drop</span>
+          <span className="text-xs text-porscheGray-dark">PNG, JPG up to 10MB</span>
+        </label>
+        <input 
+          id={`file-upload-${multiple ? 'multi' : 'single'}`}
+          type="file" 
+          className="hidden"
+          multiple={multiple}
+          onChange={handleFileChange}
+          accept="image/png, image/jpeg"
+        />
       </div>
       
-      {/* Tampilkan Pratinjau Gambar */}
+      {/* Tampilkan thumbnail dari initialPreviews atau file yang baru dipilih */}
       {previews.length > 0 && (
-        <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-          {previews.map((src, index) => (
-            <div key={index} className="relative aspect-square">
-              <img 
-                src={src} 
-                alt={`Preview ${index + 1}`} 
-                className="h-full w-full rounded-md object-cover" 
-                // Jika gambar gagal dimuat (misal karena path salah), tampilkan placeholder
-                onError={(e) => { e.target.onerror = null; e.target.src="https://via.placeholder.com/150?text=Error"; }}
-              />
-            </div>
+        <div className="mt-4 flex flex-wrap gap-4">
+          {previews.map((file, index) => (
+            <Thumbnail key={index} file={file} />
           ))}
         </div>
       )}
