@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import ImageUpload from "./ImageUpload";
 import { PinataSDK } from "pinata";
 
+// Konfigurasi Pinata Anda
 export const pinataConfig = new PinataSDK({
   pinataJwt: `${import.meta.env.VITE_JWT}`,
   pinataGateway: `${import.meta.env.VITE_CLOUD}`,
 });
 
+// Komponen helper untuk input dinamis
 const DynamicInputField = ({ value, onChange, onRemove, placeholder }) => (
   <div className="flex items-center gap-2">
     <input
@@ -26,31 +28,33 @@ const DynamicInputField = ({ value, onChange, onRemove, placeholder }) => (
   </div>
 );
 
+// Komponen Form Utama
 export default function AddProductForm({ initialData, onSave }) {
   const isEditMode = Boolean(initialData);
 
   const initialFormState = {
     preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
-    // Pastikan semua field baru ada di state awalssss
     paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "",
+    wheelcolours: "",
+    // --- PERUBAHAN DI SINI ---
+    wheelaccesories: "", // Diubah dari [""] menjadi ""
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  
   const [previewFile, setPreviewFile] = useState(null); 
   const [imageFiles, setImageFiles] = useState([]);      
+
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+  
   const previewUploadKey = useRef(0);
   const imagesUploadKey = useRef(1);
 
-  // --- PERBAIKAN UTAMA DI SINI ---
   useEffect(() => {
     if (isEditMode && initialData) {
-      // Gabungkan state awal dengan data yang ada untuk memastikan semua field terdefinisi
       const mergedData = { ...initialFormState, ...initialData };
-
-      // Pastikan field array memiliki setidaknya satu string kosong jika datanya kosong
-      // Ini penting agar input field tetap muncul meskipun datanya tidak ada
+      // Hapus 'wheelaccesories' dari daftar field array
       ['powertrainperformance', 'exteriordesign', 'interiordesign', 'comfortnusability', 'lightsvision'].forEach(field => {
         if (!mergedData[field] || mergedData[field].length === 0) {
           mergedData[field] = [''];
@@ -59,7 +63,6 @@ export default function AddProductForm({ initialData, onSave }) {
       setFormData(mergedData);
     }
   }, [initialData, isEditMode]);
-  // --- AKHIR PERBAIKAN ---
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -158,7 +161,7 @@ export default function AddProductForm({ initialData, onSave }) {
       <label className="mb-2 block text-sm font-bold text-porscheGray-dark">{title}</label>
       <div className="space-y-3">
         {formData[fieldName]?.map((item, index) => (
-          <DynamicInputField key={index} value={item} onChange={(e) => handleDynamicChange(e, index, fieldName)} onRemove={() => handleRemoveItem(index, fieldName)} />
+          <DynamicInputField key={index} value={item} onChange={(e) => handleDynamicChange(e, index, fieldName)} onRemove={() => handleRemoveItem(index, fieldName)} placeholder="Enter a feature..." />
         ))}
       </div>
       <button type="button" onClick={() => handleAddItem(fieldName)} className="mt-3 rounded-lg border border-porscheGray bg-porscheGray-light px-4 py-2 text-sm font-bold text-porscheBlack transition hover:bg-porscheGray">+ Add Feature</button>
@@ -173,7 +176,6 @@ export default function AddProductForm({ initialData, onSave }) {
       </header>
       <form onSubmit={handleSubmit} className="space-y-8">
         
-        {/* Image Upload Sections */}
         <div className="space-y-3 rounded-lg border border-porscheGray p-4">
             <h2 className="text-xl font-bold">Preview Image</h2>
             <ImageUpload key={previewUploadKey.current} onFilesChange={handlePreviewFileChange} initialPreviews={isEditMode && formData.preview ? [formData.preview] : []} multiple={false} />
@@ -183,7 +185,6 @@ export default function AddProductForm({ initialData, onSave }) {
             <ImageUpload key={imagesUploadKey.current} onFilesChange={handleDetailFilesChange} initialPreviews={isEditMode ? formData.images : []} multiple={true} />
         </div>
 
-        {/* --- BAGIAN UTAMA FORM --- */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div><label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label><input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
           <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
@@ -200,7 +201,6 @@ export default function AddProductForm({ initialData, onSave }) {
         
         <div><label htmlFor="infotainment" className="mb-2 block text-sm font-bold text-porscheGray-dark">Infotainment</label><textarea id="infotainment" name="infotainment" value={formData.infotainment} onChange={handleChange} rows="4" className="w-full rounded-lg border border-porscheGray p-3"></textarea></div>
         
-        {/* --- FORM BARU DITAMBAHKAN DI SINI --- */}
         <div className="space-y-8 rounded-lg border border-porscheGray p-6">
             <h2 className="text-2xl font-bold text-center text-porscheBlack">Additional Configuration Details</h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -211,16 +211,21 @@ export default function AddProductForm({ initialData, onSave }) {
                 <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
                 <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
             </div>
-            
             <DynamicSection title="Exterior Design" fieldName="exteriordesign"/>
             <DynamicSection title="Interior Design" fieldName="interiordesign"/>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div><label htmlFor="wheelcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Colours</label><input type="text" id="wheelcolours" name="wheelcolours" value={formData.wheelcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
+              
+              {/* --- PERUBAHAN DI SINI --- */}
+              <div><label htmlFor="wheelaccesories" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Accesories</label><input type="text" id="wheelaccesories" name="wheelaccesories" value={formData.wheelaccesories} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
+            </div>
             <DynamicSection title="Comfort & Usability" fieldName="comfortnusability"/>
             <DynamicSection title="Lights & Vision" fieldName="lightsvision"/>
             <div><label htmlFor="equipmentpackages" className="mb-2 block text-sm font-bold text-porscheGray-dark">Equipment Packages</label><input type="text" id="equipmentpackages" name="equipmentpackages" value={formData.equipmentpackages} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
         </div>
 
         <div className="border-t border-porscheGray pt-6">
-          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-porscheRed py-4 text-lg font-bold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-porscheGray-500">
+          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-porscheRed py-4 text-lg font-bold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-500">
             {isLoading ? "Menyimpan..." : isEditMode ? "Update Configuration" : "Save Configuration"}
           </button>
           {message && (<p className={`mt-4 text-center text-sm font-bold ${message.startsWith("Error") ? "text-red-500" : "text-green-500"}`}>{message}</p>)}

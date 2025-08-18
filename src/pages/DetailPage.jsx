@@ -76,9 +76,6 @@ export default function DetailPage({ car, onBack }) {
             <div className="sticky top-20">
                 <h1 className="text-3xl font-bold text-porscheBlack">{car?.vehicle} <span className="text-lg font-normal text-porscheGray-dark">{car?.modelyear}</span></h1>
                 
-                {/* --- PERUBAHAN DI SINI --- */}
-
-                {/* 1. Harga dipindahkan ke atas dan dibuat bold */}
                 <div className="border-b border-porscheGray pb-4 my-4">
                     <p className="text-sm font-bold text-porscheGray-dark">Price (IDR)</p>
                     <p className="text-2xl font-bold text-porscheBlack">
@@ -88,21 +85,24 @@ export default function DetailPage({ car, onBack }) {
                             minimumFractionDigits: 0,
                         }).format(Math.round(car?.price || 0))}
                     </p>
-                    <p className="text-sm text-porscheGray-dark mb-4">
+                </div>
+
+                <p className="text-sm text-porscheGray-dark mb-4">
                     Comm. Nr: {car?.commnr}
                 </p>
-
-                </div>
-                {/* --- AKHIR PERUBAHAN --- */}
                 
                 <div className="space-y-6 max-h-[65vh] overflow-y-auto pr-4">
                     <h2 className="text-xl font-bold text-porscheBlack">Technical Data</h2>
                     
-                    {/* Harga sudah tidak ada di sini lagi */}
                     <DetailSection title="Exterior Colour" data={car?.exteriorcolour} />
                     <DetailSection title="Interior Colours" data={car?.interiorcolours} />
                     <DetailSection title="Wheels" data={car?.wheels} />
                     <DetailSection title="Painted Wheels" data={car?.paintedwheels} />
+                    
+                    {/* --- ATRIBUT BARU DITAMPILKAN DI SINI --- */}
+                    <DetailSection title="Wheel Colours" data={car?.wheelcolours} />
+                    <DetailSection title="Wheel Accesories" data={car?.wheelaccesories} />
+                    
                     <DetailSection title="Seats" data={car?.seats} />
                     <DetailSection title="Seatbelts & Seat Design" data={car?.seatbeltsseatdesign} />
                     <DetailSection title="Lettering & Decals" data={car?.letteringdecals} />
