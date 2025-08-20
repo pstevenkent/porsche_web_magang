@@ -35,8 +35,8 @@ export default function AddProductForm({ initialData, onSave }) {
   };
 
   const [formData, setFormData] = useState(initialFormState);
-  const [previewFile, setPreviewFile] = useState(null); 
-  const [imageFiles, setImageFiles] = useState([]);      
+  const [previewFile, setPreviewFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const previewUploadKey = useRef(0);
@@ -128,8 +128,8 @@ export default function AddProductForm({ initialData, onSave }) {
       };
       const url = isEditMode ? `http://localhost:8080/api/v1/cars/${initialData.id}` : "http://localhost:8080/api/v1/cars";
       const method = isEditMode ? "PATCH" : "POST";
-      const response = await fetch(url, { 
-        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalCarData) 
+      const response = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalCarData)
       });
       const result = await response.json();
       if (!response.ok || result.status !== "success") {
@@ -170,55 +170,55 @@ export default function AddProductForm({ initialData, onSave }) {
         <p className="mt-2 text-lg text-porscheGray-dark">{isEditMode ? `Mengedit konfigurasi untuk ${initialData.vehicle}` : "Isi detail untuk konfigurasi mobil baru."}</p>
       </header>
       <form onSubmit={handleSubmit} className="space-y-8">
-        
+
         {/* Image Upload Sections */}
         <div className="space-y-3 rounded-lg border border-porscheGray p-4">
-            <h2 className="text-xl font-bold">Preview Image</h2>
-            <ImageUpload key={previewUploadKey.current} onFilesChange={handlePreviewFileChange} initialPreviews={isEditMode && formData.preview ? [formData.preview] : []} multiple={false} />
+          <h2 className="text-xl font-bold">Preview Image</h2>
+          <ImageUpload key={previewUploadKey.current} onFilesChange={handlePreviewFileChange} initialPreviews={isEditMode && formData.preview ? [formData.preview] : []} multiple={false} />
         </div>
         <div className="space-y-3 rounded-lg border border-porscheGray p-4">
-            <h2 className="text-xl font-bold">Detail Images</h2>
-            <ImageUpload key={imagesUploadKey.current} onFilesChange={handleDetailFilesChange} initialPreviews={isEditMode ? formData.images : []} multiple={true} />
+          <h2 className="text-xl font-bold">Detail Images</h2>
+          <ImageUpload key={imagesUploadKey.current} onFilesChange={handleDetailFilesChange} initialPreviews={isEditMode ? formData.images : []} multiple={true} />
         </div>
 
         {/* --- BAGIAN UTAMA FORM --- */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div><label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label><input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
-          <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
-          <div><label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label><input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
-          <div><label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label><input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required/></div>
-          <div><label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour</label><input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-          <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-          <div><label htmlFor="wheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheels</label><input type="text" id="wheels" name="wheels" value={formData.wheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-          <div><label htmlFor="seats" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seats</label><input type="text" id="seats" name="seats" value={formData.seats} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
+          <div><label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label><input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
+          <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
+          <div><label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label><input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
+          <div><label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label><input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
+          <div><label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour</label><input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          <div><label htmlFor="wheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheels</label><input type="text" id="wheels" name="wheels" value={formData.wheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          <div><label htmlFor="seats" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seats</label><input type="text" id="seats" name="seats" value={formData.seats} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
         </div>
-        <div><label htmlFor="rooftransport" className="mb-2 block text-sm font-bold text-porscheGray-dark">Roof Transport System</label><input type="text" id="rooftransport" name="rooftransport" value={formData.rooftransport} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-        
-        <DynamicSection title="Powertrain & Performance Features" fieldName="powertrainperformance"/>
-        
-        <div><label htmlFor="infotainment" className="mb-2 block text-sm font-bold text-porscheGray-dark">Infotainment</label><textarea id="infotainment" name="infotainment" value={formData.infotainment} onChange={handleChange} rows="4" className="w-full rounded-lg border border-porscheGray p-3"></textarea></div>
-        
+        <div><label htmlFor="rooftransport" className="mb-2 block text-sm font-bold text-porscheGray-dark">Roof Transport System</label><input type="text" id="rooftransport" name="rooftransport" value={formData.rooftransport} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+
+        <DynamicSection title="Powertrain & Performance Features" fieldName="powertrainperformance" />
+
+        <div><label htmlFor="infotainment" className="mb-2 block text-sm font-bold text-porscheGray-dark">Infotainment - Others</label><textarea id="infotainment" name="infotainment" value={formData.infotainment} onChange={handleChange} rows="4" className="w-full rounded-lg border border-porscheGray p-3"></textarea></div>
+
         {/* --- FORM BARU DITAMBAHKAN DI SINI --- */}
         <div className="space-y-8 rounded-lg border border-porscheGray p-6">
-            <h2 className="text-2xl font-bold text-center text-porscheBlack">Additional Configuration Details</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div><label htmlFor="paintedwheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Painted Wheels</label><input type="text" id="paintedwheels" name="paintedwheels" value={formData.paintedwheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-                <div><label htmlFor="letteringdecals" className="mb-2 block text-sm font-bold text-porscheGray-dark">Lettering & Decals</label><input type="text" id="letteringdecals" name="letteringdecals" value={formData.letteringdecals} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-                <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-            </div>
-            
-            <DynamicSection title="Exterior Design" fieldName="exteriordesign"/>
-            <DynamicSection title="Interior Design" fieldName="interiordesign"/>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div><label htmlFor="wheelcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Colours</label><input type="text" id="wheelcolours" name="wheelcolours" value={formData.wheelcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-              <div><label htmlFor="wheelaccesories" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Accesories</label><input type="text" id="wheelaccesories" name="wheelaccesories" value={formData.wheelaccesories} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
-            </div>
-            <DynamicSection title="Comfort & Usability" fieldName="comfortnusability"/>
-            <DynamicSection title="Lights & Vision" fieldName="lightsvision"/>
-            <div><label htmlFor="equipmentpackages" className="mb-2 block text-sm font-bold text-porscheGray-dark">Equipment Packages</label><input type="text" id="equipmentpackages" name="equipmentpackages" value={formData.equipmentpackages} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3"/></div>
+          <h2 className="text-2xl font-bold text-center text-porscheBlack">Additional Configuration Details</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div><label htmlFor="paintedwheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Painted Wheels</label><input type="text" id="paintedwheels" name="paintedwheels" value={formData.paintedwheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="letteringdecals" className="mb-2 block text-sm font-bold text-porscheGray-dark">Lettering & Decals</label><input type="text" id="letteringdecals" name="letteringdecals" value={formData.letteringdecals} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          </div>
+
+          <DynamicSection title="Exterior Design" fieldName="exteriordesign" />
+          <DynamicSection title="Interior Design" fieldName="interiordesign" />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div><label htmlFor="wheelcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Colours</label><input type="text" id="wheelcolours" name="wheelcolours" value={formData.wheelcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="wheelaccesories" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Accesories</label><input type="text" id="wheelaccesories" name="wheelaccesories" value={formData.wheelaccesories} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          </div>
+          <DynamicSection title="Comfort & Usability" fieldName="comfortnusability" />
+          <DynamicSection title="Lights & Vision" fieldName="lightsvision" />
+          <div><label htmlFor="equipmentpackages" className="mb-2 block text-sm font-bold text-porscheGray-dark">Equipment Packages</label><input type="text" id="equipmentpackages" name="equipmentpackages" value={formData.equipmentpackages} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
         </div>
 
         <div className="border-t border-porscheGray pt-6">
