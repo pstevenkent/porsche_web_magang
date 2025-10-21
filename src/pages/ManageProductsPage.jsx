@@ -9,8 +9,8 @@ export default function ManageProductsPage({ onEdit }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Fungsi untuk mengambil data mobil dari backend
   const fetchCars = async () => {
     setLoading(true);
     setError('');
@@ -29,12 +29,10 @@ export default function ManageProductsPage({ onEdit }) {
     }
   };
 
-  // Ambil data saat komponen pertama kali dimuat
   useEffect(() => {
     fetchCars();
   }, []);
 
-  // Fungsi untuk menangani penghapusan produk
   const handleDelete = async (carId, carName) => {
     if (!window.confirm(`Apakah Anda yakin ingin menghapus ${carName}?`)) {
       return;
@@ -50,11 +48,16 @@ export default function ManageProductsPage({ onEdit }) {
         throw new Error(result.message || 'Gagal menghapus produk.');
       }
       setMessage(`Berhasil menghapus ${carName}.`);
-      fetchCars(); // Muat ulang daftar mobil setelah berhasil dihapus
+      fetchCars();
     } catch (err) {
       setError(err.message);
     }
   };
+  
+  // Logika untuk memfilter mobil berdasarkan searchTerm (FIXED)
+  const filteredCars = cars.filter(car => 
+    (car.commnr ?? '').toString().toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="font-porsche text-porscheBlack p-4 sm:p-8 bg-white rounded-b-xl">
@@ -68,41 +71,57 @@ export default function ManageProductsPage({ onEdit }) {
       {message && <p className="text-center text-green-500 font-bold">{message}</p>}
 
       {!loading && !error && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-porscheGray">
-            <thead className="bg-porscheGray-light">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Kendaraan</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Tahun Model</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Warna Eksterior</th>
-                <th scope="col" className="relative px-6 py-3"><span className="sr-only">Aksi</span></th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-porscheGray">
-              {cars.length > 0 ? (
-                cars.map((car) => (
-                  <tr key={car.id} className="hover:bg-porscheGray-light">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-porscheBlack">{car.vehicle}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-porscheGray-dark">{car.modelyear}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-porscheGray-dark">{car.exteriorcolour}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                      <button onClick={() => onEdit(car)} className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-2">
-                        <EditIcon /> Edit
-                      </button>
-                      <button onClick={() => handleDelete(car.id, car.vehicle)} className="text-porscheRed hover:text-red-900 inline-flex items-center gap-2">
-                        <DeleteIcon /> Hapus
-                      </button>
+        <>
+          <div className="mb-6">
+            <input
+              type="text"
+              className="w-full p-3 border border-porscheGray rounded-md focus:outline-none focus:ring-2 focus:ring-porscheGray-dark"
+              placeholder="Cari berdasarkan Comm. Nr..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-porscheGray">
+              <thead className="bg-porscheGray-light">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Kendaraan</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Tahun Model</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Warna Eksterior</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-porscheGray-dark uppercase tracking-wider">Comm. Nr.</th>
+                  <th scope="col" className="relative px-6 py-3"><span className="sr-only">Aksi</span></th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-porscheGray">
+                {filteredCars.length > 0 ? (
+                  filteredCars.map((car) => (
+                    <tr key={car.id} className="hover:bg-porscheGray-light">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-porscheBlack">{car.vehicle}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-porscheGray-dark">{car.modelyear}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-porscheGray-dark">{car.exteriorcolour}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-porscheGray-dark">{car.commnr}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                        <button onClick={() => onEdit(car)} className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-2">
+                          <EditIcon /> Edit
+                        </button>
+                        <button onClick={() => handleDelete(car.id, car.vehicle)} className="text-porscheRed hover:text-red-900 inline-flex items-center gap-2">
+                          <DeleteIcon /> Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-4 text-center text-porscheGray-dark">
+                      {cars.length > 0 ? "Tidak ada kendaraan yang cocok dengan pencarian." : "Tidak ada kendaraan yang ditemukan di database."}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-porscheGray-dark">Tidak ada kendaraan yang ditemukan di database.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
