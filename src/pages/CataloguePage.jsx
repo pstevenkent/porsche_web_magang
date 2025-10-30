@@ -1,15 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import CarCard from '../components/CarCard';
-import SearchBar from '../components/SearchBar'; // 1. Impor komponen SearchBar
+
+// 🔍 Komponen SearchBar + Dropdown
+const SearchIcon = () => (
+  <svg
+    className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-porscheGray-dark"
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+function SearchBarWithFilter({
+  query,
+  onQueryChange,
+  categories = [],
+  selectedCategory,
+  onCategoryChange
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-12">
+      {/* SearchBar */}
+      <div className="relative w-full sm:max-w-lg">
+        <SearchIcon />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Search by Comm. Nr..."
+          className="w-full rounded-full border border-porscheGray bg-white py-3 pl-12 pr-4 text-porscheBlack transition focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50"
+        />
+      </div>
+
+      {/* Dropdown kategori */}
+      <select
+        value={selectedCategory}
+        onChange={(e) => onCategoryChange(e.target.value)}
+        className="w-full sm:w-52 rounded-full border border-porscheGray bg-white py-3 px-4 text-porscheBlack cursor-pointer transition focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50"
+      >
+        <option value="">All models</option>
+        {categories.map((cat) => (
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export default function CataloguePage({ onSelectCar }) {
   const [carData, setCarData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // 2. Tambahkan state baru untuk menyimpan query pencarian
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
+  // --- Matikan scroll restoration bawaan browser ---
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // --- Ambil data mobil ---
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -36,6 +99,34 @@ export default function CataloguePage({ onSelectCar }) {
     fetchCars();
   }, []);
 
+  // --- Simpan posisi scroll saat user scroll ---
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        sessionStorage.setItem("catalogueScroll", window.scrollY);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // --- Restore posisi scroll setelah data selesai dimuat ---
+  useEffect(() => {
+    if (!loading && !error) {
+      const savedScroll = sessionStorage.getItem("catalogueScroll");
+      if (savedScroll) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo(0, parseInt(savedScroll, 10));
+          });
+        });
+      }
+    }
+  }, [loading, error]);
+
   return (
     <div className="p-4 sm:p-8 bg-white font-porsche rounded-b-xl">
       <header className="text-center mb-12">
@@ -43,39 +134,44 @@ export default function CataloguePage({ onSelectCar }) {
         <p className="text-porscheGray-dark mt-2">Find your perfect Porsche.</p>
       </header>
       
-      {/* 3. Tampilkan SearchBar di sini */}
-      <SearchBar query={searchQuery} onQueryChange={setSearchQuery} />
-      
+      {/* Search + Dropdown */}
+      <SearchBarWithFilter
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        categories={Object.keys(carData)}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
+
       {loading && <p className="text-center text-lg">Loading catalogue...</p>}
       {error && <p className="text-center text-lg text-porscheRed">Error: {error}</p>}
 
       {!loading && !error && (
         <div className="space-y-16">
-          {Object.entries(carData).map(([type, models]) => {
-            
-            // --- 4. LOGIKA FILTER DITAMBAHKAN DI SINI ---
-            const filteredModels = models.filter(car => 
-              car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+          {Object.entries(carData)
+            .filter(([type]) => !selectedCategory || selectedCategory === type) // ✅ Filter kategori
+            .map(([type, models]) => {
+              const filteredModels = models.filter(car => 
+                car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
+              );
 
-            // Jika setelah difilter tidak ada mobil di kategori ini, jangan tampilkan seksinya
-            if (filteredModels.length === 0) {
-              return null;
-            }
-            // --- AKHIR LOGIKA FILTER ---
+              if (filteredModels.length === 0) {
+                return null;
+              }
 
-            return (
-              <section key={type}>
-                <h2 className="text-3xl font-bold mb-6 border-b pb-3 text-porscheBlack">The {type} models</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                  {/* Gunakan 'filteredModels' untuk me-render kartu */}
-                  {filteredModels.map(car => (
-                    <CarCard key={car.id} car={car} onSelect={onSelectCar} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+              return (
+                <section key={type} id={`section-${type}`}>
+                  <h2 className="text-3xl font-bold mb-6 border-b pb-3 text-porscheBlack">
+                    The {type} models
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+                    {filteredModels.map(car => (
+                      <CarCard key={car.id} car={car} onSelect={onSelectCar} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
         </div>
       )}
     </div>
