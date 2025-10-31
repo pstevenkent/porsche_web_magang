@@ -29,7 +29,6 @@ const Thumbnail = ({ file }) => {
   );
 };
 
-
 // Komponen Utama ImageUpload
 export default function ImageUpload({ onFilesChange, initialPreviews = [], multiple = false }) {
   const [files, setFiles] = useState([]);
@@ -43,7 +42,6 @@ export default function ImageUpload({ onFilesChange, initialPreviews = [], multi
   }, [onFilesChange]);
   
   // Tentukan file apa yang akan ditampilkan sebagai preview
-  // Jika ada file baru dipilih, tampilkan itu. Jika tidak, tampilkan initialPreviews.
   const previews = files.length > 0 ? files : initialPreviews;
 
   // Buat ID unik untuk input file agar label berfungsi dengan benar
@@ -51,30 +49,29 @@ export default function ImageUpload({ onFilesChange, initialPreviews = [], multi
 
   return (
     <div>
-      {/* --- PERUBAHAN UTAMA DI SINI --- */}
-      {/* Sekarang <label> adalah elemen terluar yang memiliki style kotak */}
+      {/* Label utama yang berfungsi sebagai area upload */}
       <label 
         htmlFor={inputId} 
         className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-porscheGray transition hover:border-porscheRed hover:bg-porscheGray-light"
       >
-        {/* Konten (ikon dan teks) sekarang berada di dalam label */}
-        <svg className="h-8 w-8 text-porscheGray-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+        <svg className="h-8 w-8 text-porscheGray-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
         <span className="mt-2 text-sm text-porscheBlack">Upload files or drag and drop</span>
-        <span className="text-xs text-porscheGray-dark">PNG, JPG up to 10MB</span>
+        <span className="text-xs text-porscheGray-dark">PNG, JPG, WEBP up to 10MB</span>
       </label>
       
-      {/* Input file tetap disembunyikan */}
+      {/* Input file disembunyikan */}
       <input 
         id={inputId}
         type="file" 
         className="hidden"
         multiple={multiple}
         onChange={handleFileChange}
-        accept="image/png, image/jpeg"
+        accept="image/png, image/jpeg, image/webp" // ✅ Tambahkan dukungan untuk .webp
       />
-      {/* --- AKHIR PERUBAHAN --- */}
       
-      {/* Tampilkan thumbnail dari initialPreviews atau file yang baru dipilih */}
+      {/* Thumbnail preview */}
       {previews.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-4">
           {previews.map((file, index) => (
