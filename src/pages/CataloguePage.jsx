@@ -1,5 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import CarCard from '../components/CarCard';
+import confetti from "canvas-confetti"; // 🔥 TAMBAHAN
+
+// 🔥 TAMBAHKAN FUNCTION FIREWORKS + SOUND
+const playFireworks = () => {
+  // Confetti efek
+  confetti({
+    particleCount: 200,
+    spread: 100,
+    startVelocity: 40,
+    origin: { y: 0.7 }
+  });
+
+  // Sound effect
+  const audio = new Audio("/confetti-pop-sound.mp3");
+  audio.volume = 0.6;
+  audio.play();
+};
+// -------------------------------------------------------------
 
 // 🔍 Komponen SearchBar + Dropdown
 const SearchIcon = () => (
@@ -41,7 +59,7 @@ function SearchBarWithFilter({
         />
       </div>
 
-      {/* Dropdown kategori */}
+      {/* Dropdown */}
       <select
         value={selectedCategory}
         onChange={(e) => onCategoryChange(e.target.value)}
@@ -65,18 +83,15 @@ export default function CataloguePage({ onSelectCar }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // --- State filterMode (ini sudah ada dari kode saya sebelumnya) ---
-  const [filterMode, setFilterMode] = useState('all'); // 'all' atau 'special'
-  // -----------------------------------------------------------------
+  const [filterMode, setFilterMode] = useState('all');
 
-  // --- Matikan scroll restoration bawaan browser ---
+  // Scroll handling
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
   }, []);
 
-  // --- Ambil data mobil ---
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -103,7 +118,6 @@ export default function CataloguePage({ onSelectCar }) {
     fetchCars();
   }, []);
 
-  // --- Simpan posisi scroll saat user scroll ---
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 0) {
@@ -112,12 +126,9 @@ export default function CataloguePage({ onSelectCar }) {
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- Restore posisi scroll setelah data selesai dimuat ---
   useEffect(() => {
     if (!loading && !error) {
       const savedScroll = sessionStorage.getItem("catalogueScroll");
@@ -137,8 +148,7 @@ export default function CataloguePage({ onSelectCar }) {
         <h1 className="text-5xl font-bold tracking-wider text-porscheBlack">MODELS</h1>
         <p className="text-porscheGray-dark mt-2">Find your perfect Porsche.</p>
       </header>
-      
-      {/* Search + Dropdown */}
+
       <SearchBarWithFilter
         query={searchQuery}
         onQueryChange={setSearchQuery}
@@ -147,7 +157,7 @@ export default function CataloguePage({ onSelectCar }) {
         onCategoryChange={setSelectedCategory}
       />
 
-      {/* --- Tombol Filter (ini sudah ada dari kode saya sebelumnya) --- */}
+      {/* 🔥 TOMBOL SPECIAL PRICE + FIREWORKS */}
       <div className="mb-12 flex justify-center gap-4">
         <button
           onClick={() => setFilterMode('all')}
@@ -159,8 +169,12 @@ export default function CataloguePage({ onSelectCar }) {
         >
           All Models
         </button>
+
         <button
-          onClick={() => setFilterMode('special')}
+          onClick={() => {
+            setFilterMode('special');
+            playFireworks();     // 🎆 SOUND + CONFETTI DI SINI
+          }}
           className={`rounded-lg px-6 py-2 text-sm font-bold transition ${
             filterMode === 'special'
               ? 'bg-porscheRed text-white'
@@ -170,8 +184,6 @@ export default function CataloguePage({ onSelectCar }) {
           Special Price Cars
         </button>
       </div>
-      {/* ---------------------------------------------------------- */}
-
 
       {loading && <p className="text-center text-lg">Loading catalogue...</p>}
       {error && <p className="text-center text-lg text-porscheRed">Error: {error}</p>}
@@ -179,28 +191,20 @@ export default function CataloguePage({ onSelectCar }) {
       {!loading && !error && (
         <div className="space-y-16">
           {Object.entries(carData)
-            .filter(([type]) => !selectedCategory || selectedCategory === type) // Filter kategori
+            .filter(([type]) => !selectedCategory || selectedCategory === type)
             .map(([type, models]) => {
-              
-              // Filter berdasarkan search query
-              const searchedModels = models.filter(car => 
+
+              const searchedModels = models.filter(car =>
                 car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
               );
 
-              // Filter lagi berdasarkan mode (All vs Special Price)
               const finalDisplayedModels = searchedModels.filter(car => {
-                if (filterMode === 'all') {
-                  return true;
-                }
-                if (filterMode === 'special') {
-                  return car.specialprice && car.specialprice > 0;
-                }
+                if (filterMode === 'all') return true;
+                if (filterMode === 'special') return car.specialprice && car.specialprice > 0;
                 return true;
               });
 
-              if (finalDisplayedModels.length === 0) {
-                return null;
-              }
+              if (finalDisplayedModels.length === 0) return null;
 
               return (
                 <section key={type} id={`section-${type}`}>
@@ -208,16 +212,14 @@ export default function CataloguePage({ onSelectCar }) {
                     The {type} models
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                    {/* --- PERUBAHAN DI SINI: tambahkan prop filterMode --- */}
                     {finalDisplayedModels.map(car => (
                       <CarCard 
-                        key={car.id} 
-                        car={car} 
-                        onSelect={onSelectCar} 
-                        filterMode={filterMode} // <-- PROP BARU DITAMBAHKAN
+                        key={car.id}
+                        car={car}
+                        onSelect={onSelectCar}
+                        filterMode={filterMode}
                       />
                     ))}
-                    {/* ------------------------------------------------- */}
                   </div>
                 </section>
               );
