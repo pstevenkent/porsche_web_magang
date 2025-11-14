@@ -65,9 +65,9 @@ export default function CataloguePage({ onSelectCar }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // --- STATE BARU UNTUK FILTER ---
+  // --- State filterMode (ini sudah ada dari kode saya sebelumnya) ---
   const [filterMode, setFilterMode] = useState('all'); // 'all' atau 'special'
-  // --------------------------------
+  // -----------------------------------------------------------------
 
   // --- Matikan scroll restoration bawaan browser ---
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function CataloguePage({ onSelectCar }) {
         onCategoryChange={setSelectedCategory}
       />
 
-      {/* --- TOMBOL FILTER BARU (DITAMBAHKAN) --- */}
+      {/* --- Tombol Filter (ini sudah ada dari kode saya sebelumnya) --- */}
       <div className="mb-12 flex justify-center gap-4">
         <button
           onClick={() => setFilterMode('all')}
@@ -163,14 +163,14 @@ export default function CataloguePage({ onSelectCar }) {
           onClick={() => setFilterMode('special')}
           className={`rounded-lg px-6 py-2 text-sm font-bold transition ${
             filterMode === 'special'
-              ? 'bg-black text-white'
-              : 'bg-porscheRed text-white hover:bg-black'
+              ? 'bg-porscheRed text-white'
+              : 'bg-porscheGray-light text-porscheBlack hover:bg-porscheGray'
           }`}
         >
-          SPECIAL PRICE CARS
+          Special Price Cars
         </button>
       </div>
-      {/* ------------------------------------- */}
+      {/* ---------------------------------------------------------- */}
 
 
       {loading && <p className="text-center text-lg">Loading catalogue...</p>}
@@ -187,7 +187,6 @@ export default function CataloguePage({ onSelectCar }) {
                 car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
               );
 
-              // --- LOGIKA FILTER BARU (DITAMBAHKAN) ---
               // Filter lagi berdasarkan mode (All vs Special Price)
               const finalDisplayedModels = searchedModels.filter(car => {
                 if (filterMode === 'all') {
@@ -198,7 +197,6 @@ export default function CataloguePage({ onSelectCar }) {
                 }
                 return true;
               });
-              // ----------------------------------------
 
               if (finalDisplayedModels.length === 0) {
                 return null;
@@ -210,10 +208,16 @@ export default function CataloguePage({ onSelectCar }) {
                     The {type} models
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                    {/* --- Gunakan finalDisplayedModels --- */}
+                    {/* --- PERUBAHAN DI SINI: tambahkan prop filterMode --- */}
                     {finalDisplayedModels.map(car => (
-                      <CarCard key={car.id} car={car} onSelect={onSelectCar} />
+                      <CarCard 
+                        key={car.id} 
+                        car={car} 
+                        onSelect={onSelectCar} 
+                        filterMode={filterMode} // <-- PROP BARU DITAMBAHKAN
+                      />
                     ))}
+                    {/* ------------------------------------------------- */}
                   </div>
                 </section>
               );

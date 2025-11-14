@@ -5,13 +5,12 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat("id-ID").format(price);
 };
 
-// Gunakan onSelect, BUKAN Link
-export default function CarCard({ car, onSelect }) {
-  
-  // onSelect(car) akan dipanggil saat div diklik
+// --- PERUBAHAN DI SINI: Terima prop 'filterMode' ---
+export default function CarCard({ car, onSelect, filterMode }) {
+
   return (
-    <div 
-      onClick={() => onSelect(car)} 
+    <div
+      onClick={() => onSelect(car)}
       className="group block cursor-pointer"
     >
       <div className="aspect-h-2 aspect-w-3 w-full overflow-hidden rounded-lg bg-gray-200">
@@ -25,11 +24,15 @@ export default function CarCard({ car, onSelect }) {
         {car.vehicle}
       </h3>
       <p className="text-sm text-porscheGray-dark">{car.modelyear}</p>
-      
-      {/* Logika harga spesial (ini sudah benar) */}
+
+      {/* --- LOGIKA HARGA BARU --- */}
       <div className="mt-1 font-bold">
-        {car.specialprice && car.specialprice > 0 ? (
-          // Jika ADA harga spesial
+        {/* Tampilkan harga spesial HANYA JIKA:
+          1. filterMode adalah 'special'
+          2. DAN mobilnya punya specialprice
+        */}
+        {filterMode === 'special' && car.specialprice && car.specialprice > 0 ? (
+          // Tampilan Harga Spesial
           <>
             <span className="mr-2 text-porscheGray-dark line-through">
               Rp {formatPrice(car.price)}
@@ -39,7 +42,7 @@ export default function CarCard({ car, onSelect }) {
             </span>
           </>
         ) : (
-          // Jika TIDAK ADA harga spesial (harga normal)
+          // Tampilan Harga Normal (untuk 'all' atau jika tidak ada diskon)
           <span className="text-porscheBlack">
             Rp {formatPrice(car.price)}
           </span>
