@@ -167,7 +167,7 @@ export default function CataloguePage({ onSelectCar }) {
               : 'bg-porscheRed text-white hover:bg-black'
           }`}
         >
-          Special Price Cars
+          SPECIAL PRICE CARS
         </button>
       </div>
       {/* ------------------------------------- */}
