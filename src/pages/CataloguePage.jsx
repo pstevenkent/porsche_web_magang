@@ -65,6 +65,10 @@ export default function CataloguePage({ onSelectCar }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+  // --- STATE BARU UNTUK FILTER ---
+  const [filterMode, setFilterMode] = useState('all'); // 'all' atau 'special'
+  // --------------------------------
+
   // --- Matikan scroll restoration bawaan browser ---
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -143,19 +147,60 @@ export default function CataloguePage({ onSelectCar }) {
         onCategoryChange={setSelectedCategory}
       />
 
+      {/* --- TOMBOL FILTER BARU (DITAMBAHKAN) --- */}
+      <div className="mb-12 flex justify-center gap-4">
+        <button
+          onClick={() => setFilterMode('all')}
+          className={`rounded-lg px-6 py-2 text-sm font-bold transition ${
+            filterMode === 'all'
+              ? 'bg-porscheBlack text-white'
+              : 'bg-porscheGray-light text-porscheBlack hover:bg-porscheGray'
+          }`}
+        >
+          All Models
+        </button>
+        <button
+          onClick={() => setFilterMode('special')}
+          className={`rounded-lg px-6 py-2 text-sm font-bold transition ${
+            filterMode === 'special'
+              ? 'bg-black text-white'
+              : 'bg-porscheRed text-white hover:bg-black'
+          }`}
+        >
+          Special Price Cars
+        </button>
+      </div>
+      {/* ------------------------------------- */}
+
+
       {loading && <p className="text-center text-lg">Loading catalogue...</p>}
       {error && <p className="text-center text-lg text-porscheRed">Error: {error}</p>}
 
       {!loading && !error && (
         <div className="space-y-16">
           {Object.entries(carData)
-            .filter(([type]) => !selectedCategory || selectedCategory === type) // ✅ Filter kategori
+            .filter(([type]) => !selectedCategory || selectedCategory === type) // Filter kategori
             .map(([type, models]) => {
-              const filteredModels = models.filter(car => 
+              
+              // Filter berdasarkan search query
+              const searchedModels = models.filter(car => 
                 car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
               );
 
-              if (filteredModels.length === 0) {
+              // --- LOGIKA FILTER BARU (DITAMBAHKAN) ---
+              // Filter lagi berdasarkan mode (All vs Special Price)
+              const finalDisplayedModels = searchedModels.filter(car => {
+                if (filterMode === 'all') {
+                  return true;
+                }
+                if (filterMode === 'special') {
+                  return car.specialprice && car.specialprice > 0;
+                }
+                return true;
+              });
+              // ----------------------------------------
+
+              if (finalDisplayedModels.length === 0) {
                 return null;
               }
 
@@ -165,7 +210,8 @@ export default function CataloguePage({ onSelectCar }) {
                     The {type} models
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                    {filteredModels.map(car => (
+                    {/* --- Gunakan finalDisplayedModels --- */}
+                    {finalDisplayedModels.map(car => (
                       <CarCard key={car.id} car={car} onSelect={onSelectCar} />
                     ))}
                   </div>
