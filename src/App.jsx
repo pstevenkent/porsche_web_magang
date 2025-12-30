@@ -4,11 +4,12 @@ import ReadCSVPage from './pages/ReadCSVPage';
 import CompareCSVPage from './pages/CompareCSVPage';
 import HistoryPage from './pages/HistoryPage';
 import CataloguePage from './pages/CataloguePage';
-import DetailPage from './pages/DetailPage'; // <-- DIUBAH: Impor DetailPage
+import DetailPage from './pages/DetailPage';
 import AddProductPage from './pages/AddProductPage';
 import ManageProductsPage from './pages/ManageProductsPage';
 import BackgroundCarousel from './components/BackgroundCarousel';
 import AddProductForm from './components/AddProductForm';
+import CompareCarsPage from './pages/CompareCarsPage';
 import './index.css';
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
 
   const handleSelectCar = (car) => {
     setSelectedCar(car);
-    setPage('detail'); // <-- DIUBAH: Arahkan ke halaman 'detail'
+    setPage('detail');
   };
 
   const handleBackToCatalogue = () => {
@@ -46,11 +47,19 @@ export default function App() {
             {page === "baca" && <ReadCSVPage />}
             {page === "banding" && <CompareCSVPage />}
             {page === "history" && <HistoryPage />}
-            {page === "viewcatalogue" && <CataloguePage onSelectCar={handleSelectCar} />}
             
-            {/* --- BAGIAN INI DIUBAH --- */}
+            {/* --- UPDATE: Passing prop onCompare --- */}
+            {page === "viewcatalogue" && (
+              <CataloguePage 
+                onSelectCar={handleSelectCar} 
+                onCompare={() => setPage('compare')} 
+              />
+            )}
+            {/* -------------------------------------- */}
+
             {page === "detail" && <DetailPage car={selectedCar} onBack={handleBackToCatalogue} />}
-            {/* ------------------------- */}
+            
+            {page === "compare" && <CompareCarsPage />}
 
             {page === "addproduct" && <AddProductPage />}
             {page === "manageproducts" && <ManageProductsPage onEdit={handleEditCar} />}
