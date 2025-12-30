@@ -1,92 +1,163 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DetailSection, formatPrice } from '../utils/carUtils';
 
+// --- ICONS ---
+const ChevronLeft = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+);
+
+const ChevronRight = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+);
+
 export default function CompareDetailColumn({ car }) {
-    // 1. Jika belum ada mobil yang dipilih (atau data masih loading), tampilkan state kosong/loading
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [imageError, setImageError] = useState(false); // State untuk tracking error gambar
+
+    useEffect(() => {
+        setCurrentImageIndex(0);
+        setImageError(false); // Reset error saat mobil berubah
+    }, [car?.id]);
+
+    // Reset error saat index gambar berubah
+    useEffect(() => {
+        setImageError(false);
+    }, [currentImageIndex]);
+
     if (!car) {
         return (
-            <div className="w-full h-full flex flex-col items-center justify-center text-porscheGray min-h-[300px]">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="h-4 w-4 bg-gray-300 rounded-full mb-2"></div>
-                    <p className="text-sm">Waiting for selection...</p>
+            <div className="w-full h-full flex flex-col items-center justify-center text-porscheGray min-h-[300px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <div className="flex flex-col items-center animate-pulse">
+                    <div className="h-10 w-10 bg-gray-200 rounded-full mb-3"></div>
+                    <p className="text-sm font-medium">Slot Empty</p>
                 </div>
             </div>
         );
     }
 
-    // 2. Ambil gambar pertama dengan aman
-    // Backend Anda mengembalikan array strings di 'images'
     const images = car.images || [];
-    const mainImage = images.length > 0 ? images[0] : 'https://via.placeholder.com/600x400?text=No+Image';
+    const hasMultipleImages = images.length > 1;
+    
+    // Gunakan placeholder lokal jika terjadi error atau tidak ada gambar
+    // Pastikan file '/images/Porsche_wordmark_black_rgb.png' ada di public folder Anda, atau ganti dengan gambar lain
+    const fallbackImage = '/images/Porsche_wordmark_black_rgb.png'; 
+    
+    let displayImage;
+    if (images.length > 0 && !imageError) {
+        displayImage = images[currentImageIndex];
+    } else {
+        displayImage = fallbackImage;
+    }
+
+    const nextImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    };
+
+    const prevImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    };
 
     return (
-        <div className="w-full bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full animate-fadeIn border border-gray-100">
-            {/* --- GAMBAR MOBIL --- */}
-            <div className="relative h-48 sm:h-64 bg-gray-50 flex items-center justify-center overflow-hidden group">
+        <div className="w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col h-full animate-fadeIn border border-gray-100 transition-all hover:shadow-2xl">
+            {/* --- GAMBAR MOBIL CAROUSEL --- */}
+            <div className="relative h-56 sm:h-72 bg-gray-100 flex items-center justify-center overflow-hidden group select-none">
                 <img 
-                    src={mainImage} 
-                    alt={car.vehicle || "Porsche"} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/600x400?text=Image+Error"; }}
+                    src={displayImage} 
+                    alt={`${car.vehicle} view ${currentImageIndex + 1}`} 
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageError ? 'object-contain p-8 opacity-50' : ''}`}
+                    onError={() => setImageError(true)} // Set state error, jangan ganti src langsung
                 />
-                {/* Overlay gradient halus */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-50" />
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+
+                {/* Navigasi hanya muncul jika gambar > 1 DAN tidak sedang error */}
+                {hasMultipleImages && (
+                    <>
+                        <button 
+                            onClick={prevImage}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none"
+                        >
+                            <ChevronLeft />
+                        </button>
+                        <button 
+                            onClick={nextImage}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none"
+                        >
+                            <ChevronRight />
+                        </button>
+                        
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                            {images.map((_, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${currentImageIndex === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
-            {/* --- DETAIL TEKNIS --- */}
+            {/* --- DETAIL TEKNIS (Tidak Berubah) --- */}
             <div className="p-6 flex-1 flex flex-col">
-                {/* Header: Nama & Tahun */}
                 <div className="mb-6 border-b border-gray-100 pb-4">
                     <h2 className="text-2xl font-bold text-porscheBlack leading-tight">{car.vehicle}</h2>
-                    <p className="text-porscheGray-dark text-sm font-semibold mt-1">
-                        Model Year {car.modelyear}
-                    </p>
+                    <div className="flex items-center mt-2">
+                        <span className="bg-porscheBlack text-white text-xs px-2 py-1 rounded font-semibold">
+                            MY {car.modelyear}
+                        </span>
+                        <span className="text-gray-400 text-xs ml-2">
+                             {car.commnr}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Harga */}
                 <div className="mb-6">
                     {car.specialprice && car.specialprice > 0 ? (
-                        <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                            <p className="text-xs font-bold text-gray-500 uppercase line-through mb-1">
-                                Original: {formatPrice(car.price)}
-                            </p>
-                            <p className="text-xl font-bold text-porscheRed">
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-100 flex flex-col">
+                            <span className="text-xs font-bold text-red-400 uppercase mb-1">Special Price</span>
+                            <span className="text-2xl font-bold text-porscheRed leading-none mb-1">
                                 {formatPrice(car.specialprice)}
-                            </p>
+                            </span>
+                             <span className="text-sm font-medium text-gray-500 line-through">
+                                {formatPrice(car.price)}
+                            </span>
                         </div>
                     ) : (
                         <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-1">Price</p>
-                            <p className="text-xl font-bold text-porscheBlack">
+                             <span className="text-xs font-bold text-gray-500 uppercase mb-1 block">Starting Price</span>
+                            <p className="text-2xl font-bold text-porscheBlack leading-none">
                                 {formatPrice(car.price)}
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* Spesifikasi (Scrollable) */}
-                <div className="space-y-4 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-                    <h3 className="text-sm font-bold text-porscheBlack uppercase tracking-wider border-b border-gray-200 pb-2 mb-3">
+                <div className="space-y-5 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar relative">
+                     <h3 className="text-sm font-bold text-porscheBlack uppercase tracking-wider border-b border-gray-200 pb-3 sticky top-0 bg-white z-10">
                         Technical Specs
                     </h3>
                     
-                    {/* List Detail Menggunakan Helper DetailSection */}
-                    <DetailSection title="Exterior Colour" data={car.exteriorcolour} />
-                    <DetailSection title="Interior Colours" data={car.interiorcolours} />
-                    <DetailSection title="Wheels" data={car.wheels} />
-                    <DetailSection title="Painted Wheels" data={car.paintedwheels} />
-                    <DetailSection title="Powertrain" data={car.powertrainperformance} />
-                    <DetailSection title="Seats" data={car.seats} />
-                    <DetailSection title="Exterior Design" data={car.exteriordesign} />
-                    <DetailSection title="Interior Design" data={car.interiordesign} />
-                    <DetailSection title="Assistance Systems" data={car.assistancesystems} />
-                    <DetailSection title="Comfort & Usability" data={car.comfortnusability} />
-                    <DetailSection title="Lights & Vision" data={car.lightsvision} />
-                    <DetailSection title="Infotainment" data={car.infotainment} />
-                    <DetailSection title="Equipment Packages" data={car.equipmentpackages} />
-                    
-                    <div className="pt-4 mt-4 border-t border-gray-100">
-                        <p className="text-xs text-gray-400">Comm. Nr: {car.commnr}</p>
+                    <div className="pt-2 space-y-6">
+                        <DetailSection title="Exterior Colour" data={car.exteriorcolour} />
+                        <DetailSection title="Interior Colours" data={car.interiorcolours} />
+                        <DetailSection title="Powertrain & Performance" data={car.powertrainperformance} />
+                        <DetailSection title="Wheels" data={car.wheels} />
+                        <DetailSection title="Painted Wheels" data={car.paintedwheels} />
+                        <DetailSection title="Exterior Design" data={car.exteriordesign} />
+                        <DetailSection title="Interior Design" data={car.interiordesign} />
+                        <DetailSection title="Seats" data={car.seats} />
+                        <DetailSection title="Assistance Systems" data={car.assistancesystems} />
+                        <DetailSection title="Comfort & Usability" data={car.comfortnusability} />
+                        <DetailSection title="Lights & Vision" data={car.lightsvision} />
+                        <DetailSection title="Infotainment" data={car.infotainment} />
+                        <DetailSection title="Equipment Packages" data={car.equipmentpackages} />
                     </div>
                 </div>
             </div>
