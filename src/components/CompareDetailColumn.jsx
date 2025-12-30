@@ -14,19 +14,34 @@ const ChevronRight = () => (
     </svg>
 );
 
+// --- HELPER: CONVERT PINATA URL TO PUBLIC GATEWAY ---
+const getOptimizedImageUrl = (url) => {
+    if (!url) return '';
+    
+    // Jika URL menggunakan Pinata, kita ganti ke gateway publik lain yang lebih stabil
+    if (url.includes('gateway.pinata.cloud')) {
+        // Opsi 1: ipfs.io (Official Gateway - Stabil tapi kadang lambat)
+        return url.replace('gateway.pinata.cloud', 'ipfs.io');
+        
+        // Opsi 2: dweb.link (Alternatif jika ipfs.io juga error/lambat)
+        // return url.replace('gateway.pinata.cloud', 'dweb.link');
+    }
+    
+    // Jika user sudah menggunakan URL cloudflare tapi error, kembalikan ke ipfs.io juga
+    if (url.includes('cloudflare-ipfs.com')) {
+        return url.replace('cloudflare-ipfs.com', 'ipfs.io');
+    }
+
+    return url;
+};
+
 export default function CompareDetailColumn({ car }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [imageError, setImageError] = useState(false); // State untuk tracking error gambar
 
+    // Reset index ke 0 setiap kali mobil yang dipilih berubah
     useEffect(() => {
         setCurrentImageIndex(0);
-        setImageError(false); // Reset error saat mobil berubah
     }, [car?.id]);
-
-    // Reset error saat index gambar berubah
-    useEffect(() => {
-        setImageError(false);
-    }, [currentImageIndex]);
 
     if (!car) {
         return (
@@ -39,20 +54,18 @@ export default function CompareDetailColumn({ car }) {
         );
     }
 
-    const images = car.images || [];
-    const hasMultipleImages = images.length > 1;
-    
-    // Gunakan placeholder lokal jika terjadi error atau tidak ada gambar
-    // Pastikan file '/images/Porsche_wordmark_black_rgb.png' ada di public folder Anda, atau ganti dengan gambar lain
-    const fallbackImage = '/images/Porsche_wordmark_black_rgb.png'; 
-    
-    let displayImage;
-    if (images.length > 0 && !imageError) {
-        displayImage = images[currentImageIndex];
-    } else {
-        displayImage = fallbackImage;
+    // Siapkan array gambar (jika kosong, gunakan fallback logo)
+    let images = car.images || [];
+    const fallbackImage = '/images/Porsche_wordmark_black_rgb.png';
+
+    // Jika images kosong, kita buat array buatan isi 1 fallback image agar logic map tetap jalan
+    if (images.length === 0) {
+        images = [fallbackImage];
     }
 
+    const hasMultipleImages = images.length > 1;
+
+    // --- NAVIGATION HANDLERS ---
     const nextImage = (e) => {
         e.stopPropagation();
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -65,38 +78,52 @@ export default function CompareDetailColumn({ car }) {
 
     return (
         <div className="w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col h-full animate-fadeIn border border-gray-100 transition-all hover:shadow-2xl">
-            {/* --- GAMBAR MOBIL CAROUSEL --- */}
+            
+            {/* --- AREA GAMBAR (PRELOADED) --- */}
             <div className="relative h-56 sm:h-72 bg-gray-100 flex items-center justify-center overflow-hidden group select-none">
-                <img 
-                    src={displayImage} 
-                    alt={`${car.vehicle} view ${currentImageIndex + 1}`} 
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageError ? 'object-contain p-8 opacity-50' : ''}`}
-                    onError={() => setImageError(true)} // Set state error, jangan ganti src langsung
-                />
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+                {/* LOOPING SEMUA GAMBAR: Render semua tapi sembunyikan yang tidak aktif dengan opacity */}
+                {images.map((imgUrl, index) => (
+                    <img 
+                        key={`${car.id}-${index}`}
+                        src={getOptimizedImageUrl(imgUrl)}
+                        alt={`${car.vehicle} view ${index + 1}`} 
+                        className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out
+                            ${index === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}
+                        `}
+                        onError={(e) => {
+                            // Jika gateway publik juga gagal, fallback ke logo lokal
+                            e.target.onerror = null; 
+                            e.target.src = fallbackImage; 
+                        }}
+                    />
+                ))}
 
-                {/* Navigasi hanya muncul jika gambar > 1 DAN tidak sedang error */}
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none z-20" />
+
+                {/* --- NAVIGATION ARROWS --- */}
                 {hasMultipleImages && (
                     <>
                         <button 
                             onClick={prevImage}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none z-30"
                         >
                             <ChevronLeft />
                         </button>
                         <button 
                             onClick={nextImage}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 hover:scale-110 focus:outline-none z-30"
                         >
                             <ChevronRight />
                         </button>
                         
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {/* Indicators (Dots) */}
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
                             {images.map((_, idx) => (
                                 <div 
                                     key={idx} 
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${currentImageIndex === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}
+                                    className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${currentImageIndex === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}
                                 />
                             ))}
                         </div>
@@ -104,7 +131,7 @@ export default function CompareDetailColumn({ car }) {
                 )}
             </div>
 
-            {/* --- DETAIL TEKNIS (Tidak Berubah) --- */}
+            {/* --- DETAIL TEKNIS (Sama seperti sebelumnya) --- */}
             <div className="p-6 flex-1 flex flex-col">
                 <div className="mb-6 border-b border-gray-100 pb-4">
                     <h2 className="text-2xl font-bold text-porscheBlack leading-tight">{car.vehicle}</h2>
