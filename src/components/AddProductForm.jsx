@@ -30,6 +30,7 @@ export default function AddProductForm({ initialData, onSave }) {
     preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
     paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "", wheelcolours: "", wheelaccesories: "",
     pdf: "",
+    specialprice: "", // <-- 1. FIELD BARU DITAMBAHKAN
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -38,6 +39,10 @@ export default function AddProductForm({ initialData, onSave }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  // --- 2. STATE BARU UNTUK CHECKBOX ---
+  const [showSpecialPrice, setShowSpecialPrice] = useState(false);
+  // ------------------------------------
 
   const previewUploadKey = useRef(0);
   const imagesUploadKey = useRef(1);
@@ -52,6 +57,12 @@ export default function AddProductForm({ initialData, onSave }) {
         }
       });
       setFormData(mergedData);
+
+      // --- 3. LOGIKA CEK DATA LAMA ---
+      if (mergedData.specialprice && mergedData.specialprice > 0) {
+        setShowSpecialPrice(true);
+      }
+      // -------------------------------
     }
   }, [initialData, isEditMode]);
 
@@ -106,14 +117,10 @@ export default function AddProductForm({ initialData, onSave }) {
       let imageUrls = formData.images;
       let pdfUrl = formData.pdf;
 
-      // =================================================================
-      // ===          PERBAIKAN DIMULAI DARI FUNGSI INI          ===
-      // =================================================================
-
       // Fungsi helper baru untuk upload ke backend Go Anda
       const uploadFileToBackend = async (file) => {
         const fileData = new FormData();
-        fileData.append('file', file); // 'file' harus cocok dengan nama field di backend
+        fileData.append('file', file);
 
         const response = await axios.post('http://localhost:8080/api/v1/upload', fileData, {
           headers: {
@@ -121,44 +128,38 @@ export default function AddProductForm({ initialData, onSave }) {
           },
         });
 
-        // --- INI ADALAH PERBAIKANNYA ---
-        // Backend Anda mengirimkan: { status: "...", data: { url: "..." } }
-        // Jadi kita perlu mengakses response.data.data.url
         if (!response.data || !response.data.data || !response.data.data.url) {
           throw new Error('Upload failed: Invalid response from server.');
         }
-        return response.data.data.url; // Mengembalikan URL dari Cloudinary
-        // ---------------------------------
+        return response.data.data.url;
       };
 
-      // =================================================================
-      // ===           PERBAIKAN SELESAI, LOGIKA KEMBALI NORMAL          ===
-      // =================================================================
-
-
-      // 1. Upload Preview Image (jika ada file baru)
+      // 1. Upload Preview Image
       if (previewFile) {
         previewUrl = await uploadFileToBackend(previewFile);
       }
 
-      // 2. Upload Detail Images (jika ada file baru)
+      // 2. Upload Detail Images
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map(file => uploadFileToBackend(file));
         imageUrls = await Promise.all(uploadPromises);
       }
 
-      // 3. Upload PDF (jika ada file baru)
+      // 3. Upload PDF
       if (pdfFile) {
         pdfUrl = await uploadFileToBackend(pdfFile);
       }
 
       setMessage("Files uploaded. Saving configuration...");
 
-      // 4. Kirim data JSON ke MongoDB (Logika ini tetap sama)
+      // 4. Kirim data JSON ke MongoDB
       const finalCarData = {
         ...formData,
         modelyear: parseInt(formData.modelyear, 10) || 0,
         price: parseInt(formData.price, 10) || 0,
+        // --- 4. KIRIM SPECIAL PRICE ---
+        specialprice: parseInt(formData.specialprice, 10) || 0,
+        // ------------------------------
         preview: previewUrl,
         images: imageUrls,
         pdf: pdfUrl,
@@ -189,13 +190,13 @@ export default function AddProductForm({ initialData, onSave }) {
         setPreviewFile(null);
         setImageFiles([]);
         setPdfFile(null);
+        setShowSpecialPrice(false); // Reset checkbox
         previewUploadKey.current += 3;
         imagesUploadKey.current += 3;
         pdfUploadKey.current += 3;
       }
       if (onSave) onSave();
     } catch (error) {
-      // Tangani error dari axios atau fetch
       const errorMessage = error.response?.data?.message || error.message;
       setMessage(`Error: ${errorMessage}`);
     } finally {
@@ -203,7 +204,6 @@ export default function AddProductForm({ initialData, onSave }) {
     }
   };
 
-  // Sisa dari JSX (tampilan) Anda tetap SAMA PERSIS
   const DynamicSection = ({ title, fieldName }) => (
     <div>
       <label className="mb-2 block text-sm font-bold text-porscheGray-dark">{title}</label>
@@ -251,7 +251,34 @@ export default function AddProductForm({ initialData, onSave }) {
           <div><label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label><input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
           <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
           <div><label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label><input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
-          <div><label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label><input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
+          
+          {/* --- 5. UI HARGA DAN SPECIAL PRICE --- */}
+          <div>
+            <label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label>
+            <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required />
+          </div>
+
+          <div className="flex items-center gap-2 self-end">
+            <input
+              type="checkbox"
+              id="specialPriceToggle"
+              checked={showSpecialPrice}
+              onChange={(e) => setShowSpecialPrice(e.target.checked)}
+              className="h-5 w-5 rounded border-porscheGray text-porscheRed focus:ring-porscheRed"
+            />
+            <label htmlFor="specialPriceToggle" className="text-sm font-bold text-porscheGray-dark">
+              Add Special Price
+            </label>
+          </div>
+
+          {showSpecialPrice && (
+            <div>
+              <label htmlFor="specialprice" className="mb-2 block text-sm font-bold text-porscheRed">Special Price (IDR)</label>
+              <input type="number" id="specialprice" name="specialprice" value={formData.specialprice} onChange={handleChange} className="w-full rounded-lg border border-porscheRed p-3 focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50" required />
+            </div>
+          )}
+          {/* --- AKHIR UI HARGA --- */}
+
           <div><label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour</label><input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
           <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
           <div><label htmlFor="wheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheels</label><input type="text" id="wheels" name="wheels" value={formData.wheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
