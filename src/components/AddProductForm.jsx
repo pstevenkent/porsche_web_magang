@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import ImageUpload from "./ImageUpload";
-import axios from "axios"; // Pastikan Anda sudah menginstal axios
+import axios from "axios"; 
+
+// -------------------------------------------------------------------
+// 1. KITA HAPUS IMPORT PINATA SDK (Penyebab Error MetaMask)
+// -------------------------------------------------------------------
+// import { PinataSDK } from "pinata"; 
 
 // Komponen helper untuk input dinamis
 const DynamicInputField = ({ value, onChange, onRemove, placeholder }) => (
@@ -30,7 +35,7 @@ export default function AddProductForm({ initialData, onSave }) {
     preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
     paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "", wheelcolours: "", wheelaccesories: "",
     pdf: "",
-    specialprice: "", // <-- 1. FIELD BARU DITAMBAHKAN
+    specialprice: "", 
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -40,9 +45,7 @@ export default function AddProductForm({ initialData, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // --- 2. STATE BARU UNTUK CHECKBOX ---
   const [showSpecialPrice, setShowSpecialPrice] = useState(false);
-  // ------------------------------------
 
   const previewUploadKey = useRef(0);
   const imagesUploadKey = useRef(1);
@@ -58,11 +61,9 @@ export default function AddProductForm({ initialData, onSave }) {
       });
       setFormData(mergedData);
 
-      // --- 3. LOGIKA CEK DATA LAMA ---
       if (mergedData.specialprice && mergedData.specialprice > 0) {
         setShowSpecialPrice(true);
       }
-      // -------------------------------
     }
   }, [initialData, isEditMode]);
 
@@ -103,6 +104,33 @@ export default function AddProductForm({ initialData, onSave }) {
     }
   };
 
+  // -------------------------------------------------------------------
+  // 2. FUNGSI BARU: UPLOAD KE PINATA SECARA MANUAL (TANPA SDK)
+  // -------------------------------------------------------------------
+  const uploadToPinata = async (file) => {
+    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+    
+    // Siapkan Data
+    let data = new FormData();
+    data.append('file', file);
+
+    // Ambil JWT dari .env Anda
+    const JWT = import.meta.env.VITE_JWT; 
+    
+    // Tembak API Pinata
+    const res = await axios.post(url, data, {
+        headers: {
+            'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
+            'Authorization': `Bearer ${JWT}`
+        }
+    });
+
+    // Kembalikan URL Gambar
+    // Pastikan VITE_CLOUD di .env formatnya "gateway.pinata.cloud" (tanpa https://) atau sesuaikan
+    const gateway = import.meta.env.VITE_CLOUD || "gateway.pinata.cloud"; 
+    return `https://${gateway}/ipfs/${res.data.IpfsHash}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!previewFile && !isEditMode) {
@@ -110,44 +138,27 @@ export default function AddProductForm({ initialData, onSave }) {
       return;
     }
     setIsLoading(true);
-    setMessage("Uploading files...");
+    setMessage("Uploading files to Pinata...");
 
     try {
       let previewUrl = formData.preview;
       let imageUrls = formData.images;
       let pdfUrl = formData.pdf;
 
-      // Fungsi helper baru untuk upload ke backend Go Anda
-      const uploadFileToBackend = async (file) => {
-        const fileData = new FormData();
-        fileData.append('file', file);
-
-        const response = await axios.post('http://localhost:8080/api/v1/upload', fileData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        if (!response.data || !response.data.data || !response.data.data.url) {
-          throw new Error('Upload failed: Invalid response from server.');
-        }
-        return response.data.data.url;
-      };
-
-      // 1. Upload Preview Image
+      // 1. Upload Preview Image (jika ada file baru)
       if (previewFile) {
-        previewUrl = await uploadFileToBackend(previewFile);
+        previewUrl = await uploadToPinata(previewFile); // <-- Pakai fungsi baru
       }
 
-      // 2. Upload Detail Images
+      // 2. Upload Detail Images (jika ada file baru)
       if (imageFiles.length > 0) {
-        const uploadPromises = imageFiles.map(file => uploadFileToBackend(file));
+        const uploadPromises = imageFiles.map(file => uploadToPinata(file)); // <-- Pakai fungsi baru
         imageUrls = await Promise.all(uploadPromises);
       }
 
-      // 3. Upload PDF
+      // 3. Upload PDF (jika ada file baru)
       if (pdfFile) {
-        pdfUrl = await uploadFileToBackend(pdfFile);
+        pdfUrl = await uploadToPinata(pdfFile); // <-- Pakai fungsi baru
       }
 
       setMessage("Files uploaded. Saving configuration...");
@@ -157,9 +168,7 @@ export default function AddProductForm({ initialData, onSave }) {
         ...formData,
         modelyear: parseInt(formData.modelyear, 10) || 0,
         price: parseInt(formData.price, 10) || 0,
-        // --- 4. KIRIM SPECIAL PRICE ---
         specialprice: parseInt(formData.specialprice, 10) || 0,
-        // ------------------------------
         preview: previewUrl,
         images: imageUrls,
         pdf: pdfUrl,
@@ -190,13 +199,14 @@ export default function AddProductForm({ initialData, onSave }) {
         setPreviewFile(null);
         setImageFiles([]);
         setPdfFile(null);
-        setShowSpecialPrice(false); // Reset checkbox
+        setShowSpecialPrice(false);
         previewUploadKey.current += 3;
         imagesUploadKey.current += 3;
         pdfUploadKey.current += 3;
       }
       if (onSave) onSave();
     } catch (error) {
+      console.error(error); // Cek console browser jika ada error
       const errorMessage = error.response?.data?.message || error.message;
       setMessage(`Error: ${errorMessage}`);
     } finally {
@@ -252,7 +262,7 @@ export default function AddProductForm({ initialData, onSave }) {
           <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
           <div><label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label><input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
           
-          {/* --- 5. UI HARGA DAN SPECIAL PRICE --- */}
+          {/* UI HARGA */}
           <div>
             <label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label>
             <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required />
@@ -277,7 +287,7 @@ export default function AddProductForm({ initialData, onSave }) {
               <input type="number" id="specialprice" name="specialprice" value={formData.specialprice} onChange={handleChange} className="w-full rounded-lg border border-porscheRed p-3 focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50" required />
             </div>
           )}
-          {/* --- AKHIR UI HARGA --- */}
+          {/* AKHIR UI HARGA */}
 
           <div><label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour</label><input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
           <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>

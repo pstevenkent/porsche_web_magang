@@ -46,7 +46,8 @@ function SearchBarWithFilter({
           type="text"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search by Comm. Nr..."
+          // Update Placeholder agar user tahu bisa cari nama juga
+          placeholder="Search by Name or Comm. Nr..."
           className="w-full rounded-full border border-porscheGray bg-white py-3 pl-12 pr-4 text-porscheBlack transition focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50"
         />
       </div>
@@ -105,8 +106,12 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
         const result = await response.json();
 
         if (result.status === 'success' && result.data.cars) {
-          // Kelompokkan mobil berdasarkan tipe (kata pertama dari nama mobil)
-          const groupedCars = result.data.cars.reduce((acc, car) => {
+          
+          // 1. FILTER ARCHIVE: Hanya ambil mobil yang TIDAK di-archive
+          const activeCars = result.data.cars.filter(car => !car.is_archived);
+
+          // 2. GROUPING: Kelompokkan mobil berdasarkan tipe
+          const groupedCars = activeCars.reduce((acc, car) => {
             const type = car.vehicle.split(' ')[0];
             if (!acc[type]) acc[type] = [];
             acc[type].push(car);
@@ -125,14 +130,11 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
     fetchCars();
   }, []);
 
-  // Restore Scroll Position
+  // Restore Scroll Position logic ...
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 0) {
-        sessionStorage.setItem("catalogueScroll", window.scrollY);
-      }
+      if (window.scrollY > 0) sessionStorage.setItem("catalogueScroll", window.scrollY);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -142,9 +144,7 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
       const savedScroll = sessionStorage.getItem("catalogueScroll");
       if (savedScroll) {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
             window.scrollTo(0, parseInt(savedScroll, 10));
-          });
         });
       }
     }
@@ -166,7 +166,7 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
         onCompare={onCompare}
       />
 
-      {/* --- TOMBOL SPECIAL PRICE (TANPA FIREWORKS) --- */}
+      {/* --- FILTER BUTTONS (ALL vs SPECIAL) --- */}
       <div className="mb-12 flex justify-center gap-4">
         <button
           onClick={() => setFilterMode('all')}
@@ -190,7 +190,6 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
           Special Price Cars
         </button>
       </div>
-      {/* ------------------------------------------- */}
 
       {loading && <p className="text-center text-lg">Loading catalogue...</p>}
       {error && <p className="text-center text-lg text-porscheRed">Error: {error}</p>}
@@ -201,19 +200,26 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
             .filter(([type]) => !selectedCategory || selectedCategory === type)
             .map(([type, models]) => {
 
-              // 1. Filter berdasarkan Search Query
-              const searchedModels = models.filter(car =>
-                car.commnr.toLowerCase().includes(searchQuery.toLowerCase())
-              );
+              // ==================================================
+              // LOGIKA FILTER SEARCH YANG DIPERBARUI
+              // ==================================================
+              const searchedModels = models.filter(car => {
+                const query = searchQuery.toLowerCase();
+                // Cari berdasarkan Nama Mobil ATAU Comm Number
+                return (
+                    car.vehicle.toLowerCase().includes(query) || 
+                    car.commnr.toLowerCase().includes(query)
+                );
+              });
 
-              // 2. Filter berdasarkan Mode (All / Special)
+              // Filter berdasarkan Mode (All / Special)
               const finalDisplayedModels = searchedModels.filter(car => {
                 if (filterMode === 'all') return true;
                 if (filterMode === 'special') return car.specialprice && car.specialprice > 0;
                 return true;
               });
 
-              // Jangan render section jika tidak ada mobil yang cocok
+              // Sembunyikan section jika kosong
               if (finalDisplayedModels.length === 0) return null;
 
               return (
@@ -227,7 +233,7 @@ export default function CataloguePage({ onSelectCar, onCompare }) {
                         key={car.id}
                         car={car}
                         onSelect={onSelectCar}
-                        filterMode={filterMode} // Pass filterMode untuk styling harga
+                        filterMode={filterMode} 
                       />
                     ))}
                   </div>

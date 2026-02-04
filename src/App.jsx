@@ -10,6 +10,8 @@ import ManageProductsPage from './pages/ManageProductsPage';
 import BackgroundCarousel from './components/BackgroundCarousel';
 import AddProductForm from './components/AddProductForm';
 import CompareCarsPage from './pages/CompareCarsPage';
+// --- 1. IMPORT ARCHIVE PAGE ---
+import ArchivePage from './pages/ArchivePage';
 import './index.css';
 
 export default function App() {
@@ -48,21 +50,35 @@ export default function App() {
             {page === "banding" && <CompareCSVPage />}
             {page === "history" && <HistoryPage />}
             
-            {/* --- UPDATE: Passing prop onCompare --- */}
             {page === "viewcatalogue" && (
               <CataloguePage 
                 onSelectCar={handleSelectCar} 
                 onCompare={() => setPage('compare')} 
               />
             )}
-            {/* -------------------------------------- */}
 
             {page === "detail" && <DetailPage car={selectedCar} onBack={handleBackToCatalogue} />}
             
             {page === "compare" && <CompareCarsPage />}
 
             {page === "addproduct" && <AddProductPage />}
-            {page === "manageproducts" && <ManageProductsPage onEdit={handleEditCar} />}
+            
+            {/* --- 2. UPDATE MANAGE PRODUCT --- */}
+            {/* Kita oper fungsi onOpenArchive agar halaman bisa berubah */}
+            {page === "manageproducts" && (
+                <ManageProductsPage 
+                    onEdit={handleEditCar} 
+                    onOpenArchive={() => setPage('archive')} 
+                />
+            )}
+            
+            {/* --- 3. TAMBAHKAN ARCHIVE PAGE --- */}
+            {page === "archive" && (
+                <ArchivePage 
+                    onBack={() => setPage('manageproducts')} 
+                />
+            )}
+
             {page === "editproduct" && (
               <div className="p-4 sm:p-8 bg-white font-porsche rounded-b-xl">
                 <AddProductForm initialData={carToEdit} onSave={handleSave} />
