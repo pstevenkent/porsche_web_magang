@@ -10,12 +10,12 @@ import ManageProductsPage from './pages/ManageProductsPage';
 import BackgroundCarousel from './components/BackgroundCarousel';
 import AddProductForm from './components/AddProductForm';
 import CompareCarsPage from './pages/CompareCarsPage';
-// --- 1. IMPORT ARCHIVE PAGE ---
 import ArchivePage from './pages/ArchivePage';
 import './index.css';
 
 export default function App() {
-  const [page, setPage] = useState("baca");
+  // 1. UBAH STATE AWAL dari "baca" ke "viewcatalogue"
+  const [page, setPage] = useState("viewcatalogue"); 
   const [selectedCar, setSelectedCar] = useState(null);
   const [carToEdit, setCarToEdit] = useState(null);
 
@@ -46,8 +46,10 @@ export default function App() {
         <main className="app-container w-full max-w-7xl p-6 sm:p-8 rounded-xl shadow-lg">
           <Header page={page} setPage={setPage} />
           <div className="mt-8">
-            {page === "baca" && <ReadCSVPage />}
-            {page === "banding" && <CompareCSVPage />}
+            {/* 2. NONAKTIFKAN RENDER HALAMAN CSV (Optional: Bisa dihapus atau dibiarkan selama Header tidak menampilkannya) */}
+            {/* {page === "baca" && <ReadCSVPage />} */}
+            {/* {page === "banding" && <CompareCSVPage />} */}
+            
             {page === "history" && <HistoryPage />}
             
             {page === "viewcatalogue" && (
@@ -63,8 +65,6 @@ export default function App() {
 
             {page === "addproduct" && <AddProductPage />}
             
-            {/* --- 2. UPDATE MANAGE PRODUCT --- */}
-            {/* Kita oper fungsi onOpenArchive agar halaman bisa berubah */}
             {page === "manageproducts" && (
                 <ManageProductsPage 
                     onEdit={handleEditCar} 
@@ -72,7 +72,6 @@ export default function App() {
                 />
             )}
             
-            {/* --- 3. TAMBAHKAN ARCHIVE PAGE --- */}
             {page === "archive" && (
                 <ArchivePage 
                     onBack={() => setPage('manageproducts')} 

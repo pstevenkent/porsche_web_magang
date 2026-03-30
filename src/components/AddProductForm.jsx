@@ -230,7 +230,7 @@ export default function AddProductForm({ initialData, onSave }) {
     <div className="font-porsche text-porscheBlack">
       <header className="mb-10 text-center">
         <h1 className="text-3xl font-bold uppercase tracking-wider sm:text-4xl">{isEditMode ? "Edit Vehicle" : "Add New Vehicle"}</h1>
-        <p className="mt-2 text-lg text-porscheGray-dark">{isEditMode ? `Mengedit konfigurasi untuk ${initialData.vehicle}` : "Isi detail untuk konfigurasi mobil baru."}</p>
+        <p className="mt-2 text-lg text-porscheGray-dark">{isEditMode ? `Mengedit konfigurasi untuk ${initialData.vehicle}` : "Fill in the details for the new car configuration."}</p>
       </header>
       <form onSubmit={handleSubmit} className="space-y-8">
 

@@ -4,11 +4,10 @@ import React from 'react';
 const NavButton = ({ children, onClick, isActive }) => (
   <button
     onClick={onClick}
-    // Ukuran font dan padding dikembalikan ke ukuran semula
-    className={`px-4 py-2 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-300 ${
+    className={`px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-md transition-all duration-500 ${
       isActive
-        ? 'bg-porscheRed text-white shadow-md'
-        : 'text-black hover:bg-white/80'
+        ? 'bg-porscheRed text-white shadow-lg'
+        : 'text-black hover:bg-gray-100/50'
     }`}
   >
     {children}
@@ -16,33 +15,45 @@ const NavButton = ({ children, onClick, isActive }) => (
 );
 
 export default function Header({ page, setPage }) {
+  // Fungsi helper untuk proteksi halaman yang dinonaktifkan
+  const changePage = (newPage) => {
+    const disabledPages = ['baca', 'banding'];
+    if (!disabledPages.includes(newPage)) {
+      setPage(newPage);
+    }
+  };
+
   return (
-    <header className="w-full backdrop-blur-sm p-7 rounded-t-xl">
-      <div className="flex items-center justify-between">
+    <header className="w-full backdrop-blur-md p-8 rounded-t-xl border-b border-gray-100/20">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Kolom Kiri: Judul (ukuran font dikembalikan) */}
-        <div className="text-left flex-shrink-0">
-        <img 
+        {/* Kolom Kiri: Logo Porsche */}
+        <div className="flex-shrink-0 transition-opacity duration-300 hover:opacity-80">
+          <img 
             src="/images/Porsche_wordmark_black_rgb.png"
             alt="Porsche Logo" 
-            className="h-5" // Tinggi logo tetap kecil
+            className="h-5 md:h-6" // Sedikit lebih besar agar tegas
           />
         </div>
-        {/* Kolom Kanan: Tombol Navigasi (jarak antar tombol dikembalikan) */}
-        <nav className="flex items-center space-x-8">
-          <NavButton onClick={() => setPage('baca')} isActive={page === 'baca'}>
+
+        {/* Kolom Kanan: Navigasi dengan jarak yang lebih lega (space-x-12) */}
+        <nav className="flex items-center space-x-6 lg:space-x-12">
+          {/* Tombol CSV disembunyikan sepenuhnya dari aliran dokumen */}
+          {/* <NavButton onClick={() => changePage('baca')} isActive={page === 'baca'}>
             View CSV
           </NavButton>
-          <NavButton onClick={() => setPage('banding')} isActive={page === 'banding'}>
+          <NavButton onClick={() => changePage('banding')} isActive={page === 'banding'}>
             Compare CSV
-          </NavButton>
-          <NavButton onClick={() => setPage('viewcatalogue')} isActive={page === 'viewcatalogue'}>
+          </NavButton> 
+          */}
+
+          <NavButton onClick={() => changePage('viewcatalogue')} isActive={page === 'viewcatalogue'}>
             View Catalogue
           </NavButton>
-          <NavButton onClick={() => setPage('manageproducts')} isActive={page === 'manageproducts'}>
+          <NavButton onClick={() => changePage('manageproducts')} isActive={page === 'manageproducts'}>
             Manage Products
           </NavButton>
-          <NavButton onClick={() => setPage('addproduct')} isActive={page === 'addproduct'}>
+          <NavButton onClick={() => changePage('addproduct')} isActive={page === 'addproduct'}>
             Add Product
           </NavButton>
         </nav>
