@@ -105,30 +105,20 @@ export default function AddProductForm({ initialData, onSave }) {
   };
 
   // -------------------------------------------------------------------
-  // 2. FUNGSI BARU: UPLOAD KE PINATA SECARA MANUAL (TANPA SDK)
+  // 2. UPLOAD FILE KE CLOUDINARY VIA BACKEND
   // -------------------------------------------------------------------
-  const uploadToPinata = async (file) => {
-    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
-    
-    // Siapkan Data
-    let data = new FormData();
+  const uploadFile = async (file) => {
+    const data = new FormData();
     data.append('file', file);
 
-    // Ambil JWT dari .env Anda
-    const JWT = import.meta.env.VITE_JWT; 
-    
-    // Tembak API Pinata
-    const res = await axios.post(url, data, {
-        headers: {
-            'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
-            'Authorization': `Bearer ${JWT}`
-        }
+    const res = await axios.post('http://localhost:8080/api/v1/upload', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    // Kembalikan URL Gambar
-    // Pastikan VITE_CLOUD di .env formatnya "gateway.pinata.cloud" (tanpa https://) atau sesuaikan
-    const gateway = import.meta.env.VITE_CLOUD || "gateway.pinata.cloud"; 
-    return `https://${gateway}/ipfs/${res.data.IpfsHash}`;
+    if (res.data?.status === 'success' && res.data?.data?.url) {
+      return res.data.data.url;
+    }
+    throw new Error(res.data?.message || 'Upload failed');
   };
 
   const handleSubmit = async (e) => {
@@ -138,7 +128,7 @@ export default function AddProductForm({ initialData, onSave }) {
       return;
     }
     setIsLoading(true);
-    setMessage("Uploading files to Pinata...");
+    setMessage("Uploading files to Cloudinary...");
 
     try {
       let previewUrl = formData.preview;
@@ -147,18 +137,18 @@ export default function AddProductForm({ initialData, onSave }) {
 
       // 1. Upload Preview Image (jika ada file baru)
       if (previewFile) {
-        previewUrl = await uploadToPinata(previewFile); // <-- Pakai fungsi baru
+        previewUrl = await uploadFile(previewFile);
       }
 
       // 2. Upload Detail Images (jika ada file baru)
       if (imageFiles.length > 0) {
-        const uploadPromises = imageFiles.map(file => uploadToPinata(file)); // <-- Pakai fungsi baru
+        const uploadPromises = imageFiles.map(file => uploadFile(file));
         imageUrls = await Promise.all(uploadPromises);
       }
 
       // 3. Upload PDF (jika ada file baru)
       if (pdfFile) {
-        pdfUrl = await uploadToPinata(pdfFile); // <-- Pakai fungsi baru
+        pdfUrl = await uploadFile(pdfFile);
       }
 
       setMessage("Files uploaded. Saving configuration...");
