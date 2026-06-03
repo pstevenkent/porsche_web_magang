@@ -87,7 +87,7 @@ export default function ArchivePage({ onBack }) {
                 <ArrowLeftIcon />
             </button>
             <div>
-                <h1 className="text-3xl font-bold">Archived Products</h1>
+                <h1 className="text-3xl font-bold">History-Archive Products</h1>
                 <p className="text-gray-500">Daftar produk yang disembunyikan.</p>
             </div>
         </div>

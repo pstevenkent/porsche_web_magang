@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Header from './components/header';
+import Header from './components/header'; 
 import ReadCSVPage from './pages/ReadCSVPage';
 import CompareCSVPage from './pages/CompareCSVPage';
 import HistoryPage from './pages/HistoryPage';
@@ -14,7 +14,6 @@ import ArchivePage from './pages/ArchivePage';
 import './index.css';
 
 export default function App() {
-  // 1. UBAH STATE AWAL dari "baca" ke "viewcatalogue"
   const [page, setPage] = useState("viewcatalogue"); 
   const [selectedCar, setSelectedCar] = useState(null);
   const [carToEdit, setCarToEdit] = useState(null);
@@ -43,13 +42,10 @@ export default function App() {
     <div className="min-h-screen font-porsche">
       <BackgroundCarousel />
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
-        <main className="app-container w-full max-w-7xl p-6 sm:p-8 rounded-xl shadow-lg">
+        <main className="app-container w-full max-w-7xl p-6 sm:p-8 rounded-xl shadow-lg bg-gray-50 text-porscheBlack">
           <Header page={page} setPage={setPage} />
+          
           <div className="mt-8">
-            {/* 2. NONAKTIFKAN RENDER HALAMAN CSV (Optional: Bisa dihapus atau dibiarkan selama Header tidak menampilkannya) */}
-            {/* {page === "baca" && <ReadCSVPage />} */}
-            {/* {page === "banding" && <CompareCSVPage />} */}
-            
             {page === "history" && <HistoryPage />}
             
             {page === "viewcatalogue" && (
@@ -60,9 +56,7 @@ export default function App() {
             )}
 
             {page === "detail" && <DetailPage car={selectedCar} onBack={handleBackToCatalogue} />}
-            
             {page === "compare" && <CompareCarsPage />}
-
             {page === "addproduct" && <AddProductPage />}
             
             {page === "manageproducts" && (
@@ -78,13 +72,29 @@ export default function App() {
                 />
             )}
 
+            {/* 🛠️ FIX PROTEKSI ANTI-BLANK: Mengamankan render agar AddProductForm tidak crash saat data transisi */}
             {page === "editproduct" && (
-              <div className="p-4 sm:p-8 bg-white font-porsche rounded-b-xl">
-                <AddProductForm initialData={carToEdit} onSave={handleSave} />
+              <div className="w-full bg-white p-6 sm:p-8 rounded-xl border border-gray-200">
+                <button 
+                  onClick={handleSave} 
+                  className="mb-6 text-sm font-bold text-porscheGray-dark hover:text-porscheBlack transition-colors flex items-center gap-2"
+                >
+                  &larr; Back to Management List
+                </button>
+                
+                {carToEdit ? (
+                  <AddProductForm initialData={carToEdit} onSave={handleSave} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="loader mb-4"></div>
+                    <p className="text-sm text-gray-500 font-bold">Loading configuration data...</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </main>
+        
         <footer className="text-center py-4 mt-4">
           <p className="text-xs text-white drop-shadow-md">
             &copy; {new Date().getFullYear()} Dr. Ing. h.c. F. Porsche AG. Font Software provided under license.

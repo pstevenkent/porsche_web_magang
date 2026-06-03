@@ -15,21 +15,33 @@ const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" heig
 const ArchiveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>);
 
 export default function ManageProductsPage({ onEdit, onOpenArchive }) {
-  const [cars, setCars] = useState([]);
+  const [carData, setCarData] = useState({}); 
+  const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingCar, setEditingCar] = useState(null);
   
-  // 1. STATE UNTUK SEARCH
+  // State Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(""); 
 
   const fetchCars = async () => {
+    setLoading(true);
     try {
         const data = await getAllCarsFromBackend();
-        // Hanya ambil mobil yang TIDAK di-archive
         const activeCars = data.filter(car => !car.is_archived);
-        setCars(activeCars);
+        
+        const groupedCars = activeCars.reduce((acc, car) => {
+          const type = car.vehicle ? car.vehicle.split(' ')[0] : "Unknown";
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(car);
+          return acc;
+        }, {});
+
+        setCarData(groupedCars);
     } catch (error) {
         console.error("Failed to fetch cars", error);
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -41,7 +53,7 @@ export default function ManageProductsPage({ onEdit, onOpenArchive }) {
     if (!window.confirm("Are you sure you want to delete this product PERMANENTLY?")) return;
     try {
       await fetch(`http://localhost:8080/api/v1/cars/${id}`, { method: "DELETE" });
-      setCars((prev) => prev.filter((car) => car.id !== id));
+      fetchCars(); 
     } catch (error) {
       console.error("Failed to delete car", error);
     }
@@ -54,13 +66,14 @@ export default function ManageProductsPage({ onEdit, onOpenArchive }) {
             method: 'PATCH'
         });
         if (response.ok) {
-            setCars((prev) => prev.filter((car) => car.id !== id));
+            fetchCars(); 
         }
     } catch (error) {
         console.error("Failed to archive car", error);
     }
   };
 
+  // JALUR DATA EDIT: Mengirimkan data ke App.jsx agar navigasi sinkron
   const handleEdit = (car) => {
     if (onEdit) {
         onEdit(car);
@@ -76,23 +89,6 @@ export default function ManageProductsPage({ onEdit, onOpenArchive }) {
     fetchCars();
   };
 
-  // ==========================================================
-  // 2. LOGIKA FILTER (SUDAH DIPERBAIKI UNTUK NAMA JUGA)
-  // ==========================================================
-  const filteredCars = cars.filter((car) => {
-    // Ubah query ke huruf kecil biar pencarian tidak case-sensitive
-    const query = searchQuery.toLowerCase();
-    
-    // Cek Nama Mobil (car.vehicle)
-    const matchName = car.vehicle && car.vehicle.toLowerCase().includes(query);
-    
-    // Cek Comm Number (car.commnr)
-    const matchComm = car.commnr && car.commnr.toLowerCase().includes(query);
-
-    // Kembalikan true jika salah satu cocok
-    return matchName || matchComm;
-  });
-
   if (isAdding) {
     return (
       <div className="min-h-screen bg-white p-8">
@@ -101,6 +97,8 @@ export default function ManageProductsPage({ onEdit, onOpenArchive }) {
       </div>
     );
   }
+
+  let totalDisplayedItems = 0;
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-porsche text-porscheBlack">
@@ -125,49 +123,113 @@ export default function ManageProductsPage({ onEdit, onOpenArchive }) {
                 />
             </div>
 
+            {/* DROPDOWN KATEGORI */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full md:w-52 rounded-full border border-gray-300 bg-white py-3 px-4 text-porscheBlack cursor-pointer transition focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50 shadow-sm"
+            >
+              <option value="">All models</option>
+              {Object.keys(carData).map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
             <div className="flex gap-3">
                 <button 
                     onClick={onOpenArchive}
-                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-bold text-gray-600 transition hover:bg-gray-100 shadow-sm whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-bold text-gray-600 transition hover:bg-gray-100 shadow-sm whitespace-nowrap w-full md:w-auto"
                 >
-                    <ArchiveIcon /> Archives
+                    <ArchiveIcon /> History-Archives
                 </button>
-
-              
             </div>
         </div>
       </div>
 
-      {/* RENDER LIST HASIL FILTER */}
-      {filteredCars.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
-              <p className="text-lg">No vehicles found matching "{searchQuery}"</p>
-          </div>
-      ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredCars.map((car) => (
-              <div key={car.id} className="overflow-hidden rounded-xl bg-white shadow-md transition hover:shadow-xl">
-                <div className="h-48 w-full bg-gray-200">
-                  <img src={car.preview || "https://via.placeholder.com/300"} alt={car.vehicle} className="h-full w-full object-cover" />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-xl font-bold">{car.vehicle}</h3>
-                  <p className="text-sm text-gray-500">{car.commnr}</p>
-                  <div className="mt-4 flex gap-2">
-                    <button onClick={() => handleEdit(car)} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-100 py-2 text-sm font-bold text-porscheBlack hover:bg-gray-200">
-                        <EditIcon /> Edit
-                    </button>
-                    <button onClick={() => handleArchive(car.id)} className="flex items-center justify-center rounded-lg bg-yellow-100 px-3 py-2 text-yellow-600 hover:bg-yellow-200" title="Archive">
-                        <ArchiveIcon />
-                    </button>
-                    <button onClick={() => handleDelete(car.id)} className="flex items-center justify-center rounded-lg bg-red-100 px-3 py-2 text-red-600 hover:bg-red-200" title="Delete">
-                        <TrashIcon />
-                    </button>
+      {loading && <p className="text-center text-lg py-10">Loading inventory...</p>}
+
+      {/* RENDER LIST BERDASARKAN KATEGORI DAN PENCARIAN */}
+      {!loading && (
+        <div className="space-y-12">
+          {Object.entries(carData)
+            .filter(([type]) => !selectedCategory || selectedCategory === type)
+            .map(([type, models]) => {
+              
+              const searchedModels = models.filter((car) => {
+                const query = searchQuery.toLowerCase();
+                const matchName = car.vehicle && car.vehicle.toLowerCase().includes(query);
+                const matchComm = car.commnr && car.commnr.toLowerCase().includes(query);
+                return matchName || matchComm;
+              });
+
+              if (searchedModels.length === 0) return null;
+              totalDisplayedItems += searchedModels.length;
+
+              return (
+                <section key={type} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="text-2xl font-bold mb-6 border-b pb-3 text-porscheBlack">
+                    The {type} models ({searchedModels.length})
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {searchedModels.map((car) => (
+                      <div key={car.id} className="overflow-hidden rounded-xl bg-gray-50 border border-gray-200 shadow-sm transition hover:shadow-md flex flex-col justify-between">
+                        <div>
+                          <div className="h-44 w-full bg-gray-200 relative">
+                            <img src={car.preview || "https://via.placeholder.com/300"} alt={car.vehicle} className="h-full w-full object-cover" />
+                            {car.specialprice > 0 && (
+                              <span className="absolute top-3 right-3 bg-porscheRed text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
+                                Special Price
+                              </span>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-lg font-bold line-clamp-1 text-porscheBlack">{car.vehicle}</h3>
+                            <p className="text-xs font-mono text-gray-400 mt-1">{car.commnr}</p>
+                            
+                            <div className="mt-3">
+                              {car.specialprice > 0 ? (
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-gray-400 line-through">Rp {car.price?.toLocaleString('id-ID')}</span>
+                                  <span className="text-sm font-bold text-porscheRed">Rp {car.specialprice?.toLocaleString('id-ID')}</span>
+                                </div>
+                              ) : (
+                                <span className="text-sm font-bold text-gray-700">Rp {car.price?.toLocaleString('id-ID') || "-"}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Button Action Group */}
+                        <div className="p-4 pt-0">
+                          <div className="mt-2 flex gap-2">
+                            <button onClick={() => handleEdit(car)} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white border border-gray-200 py-2 text-sm font-bold text-porscheBlack hover:bg-gray-100 transition">
+                                <EditIcon /> Edit
+                            </button>
+                            <button onClick={() => handleArchive(car.id)} className="flex items-center justify-center rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-yellow-600 hover:bg-yellow-100 transition" title="Archive to History">
+                                <ArchiveIcon />
+                            </button>
+                            <button onClick={() => handleDelete(car.id)} className="flex items-center justify-center rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-red-600 hover:bg-red-100 transition" title="Permanently Delete">
+                                <TrashIcon />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                </section>
+              );
+            })}
+        </div>
+      )}
+
+      {/* FEEDBACK JIKA SELURUH HASIL FILTER KOSONG */}
+      {!loading && totalDisplayedItems === 0 && (
+        <div className="text-center py-20 text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
+            <p className="text-lg">No vehicles found matching criteria.</p>
+        </div>
       )}
     </div>
   );

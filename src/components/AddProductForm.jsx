@@ -2,11 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import ImageUpload from "./ImageUpload";
 import axios from "axios"; 
 
-// -------------------------------------------------------------------
-// 1. KITA HAPUS IMPORT PINATA SDK (Penyebab Error MetaMask)
-// -------------------------------------------------------------------
-// import { PinataSDK } from "pinata"; 
-
 // Komponen helper untuk input dinamis
 const DynamicInputField = ({ value, onChange, onRemove, placeholder }) => (
   <div className="flex items-center gap-2">
@@ -32,7 +27,7 @@ export default function AddProductForm({ initialData, onSave }) {
   const isEditMode = Boolean(initialData);
 
   const initialFormState = {
-    preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: [""], infotainment: "", commnr: "", price: "",
+    preview: "", images: [], vehicle: "", modelyear: "", exteriorcolour: "", interiorcolours: "", wheels: "", seats: "", rooftransport: "", powertrainperformance: "", infotainment: "", commnr: "", price: "",
     paintedwheels: "", letteringdecals: "", seatbeltsseatdesign: "", exteriordesign: [""], interiordesign: [""], assistancesystems: "", comfortnusability: [""], lightsvision: [""], equipmentpackages: "", wheelcolours: "", wheelaccesories: "",
     pdf: "",
     specialprice: "", 
@@ -44,28 +39,145 @@ export default function AddProductForm({ initialData, onSave }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
-
   const [showSpecialPrice, setShowSpecialPrice] = useState(false);
+
+  // --- STATE KHUSUS UNTUK ROOF & TRANSPORT SYSTEMS ---
+  const presetRoofOptions = [
+    "Panoramic roof system",
+    "Sliding panoramic roof",
+    "Roof rails in aluminium"
+  ];
+  const [selectedRoofs, setSelectedRoofs] = useState([]);
+  const [customRoofInput, setCustomRoofInput] = useState("");
+
+  // --- STATE KHUSUS UNTUK INFOTAINMENT ---
+  const presetInfotainmentOptions = [
+    "BOSE® Surround Sound System"
+  ];
+  const [selectedInfotainments, setSelectedInfotainments] = useState([]);
+  const [customInfotainmentInput, setCustomInfotainmentInput] = useState("");
+
+  // --- STATE KHUSUS UNTUK POWERTRAIN & PERFORMANCE ---
+  const presetPowertrainOptions = [
+    "8-speed Porsche Doppelkupplung (PDK)",
+    "7-speed Porsche Doppelkupplung (PDK)",
+    "Power Steering plus",
+    "Sport Chrono Package",
+    "Sports exhaust system (tailpipes in Black)",
+    "Lifting system front axle",
+    "Porsche Doppelkupplung (PDK)",
+    "Porsche Electric Sport Sound",
+    "Porsche Ceramic Composite Brake (PCCB)"
+  ];
+  const [selectedPowertrains, setSelectedPowertrains] = useState([]);
+  const [customPowertrainInput, setCustomPowertrainInput] = useState("");
 
   const previewUploadKey = useRef(0);
   const imagesUploadKey = useRef(1);
   const pdfUploadKey = useRef(2);
 
+  // Parsing data saat Edit Mode dengan Proteksi Tipe Data Super Ketat
   useEffect(() => {
     if (isEditMode && initialData) {
       const mergedData = { ...initialFormState, ...initialData };
-      ['powertrainperformance', 'exteriordesign', 'interiordesign', 'comfortnusability', 'lightsvision'].forEach(field => {
-        if (!mergedData[field] || mergedData[field].length === 0) {
+      
+      // 🌟 PERBAIKAN 1: Amankan array input dinamis dari format string database
+      ['exteriordesign', 'interiordesign', 'comfortnusability', 'lightsvision'].forEach(field => {
+        if (typeof mergedData[field] === 'string' && mergedData[field].trim() !== "") {
+          mergedData[field] = mergedData[field].split(", ").map(item => item.trim());
+        }
+        if (!mergedData[field] || !Array.isArray(mergedData[field]) || mergedData[field].length === 0) {
           mergedData[field] = [''];
         }
       });
+      
       setFormData(mergedData);
 
       if (mergedData.specialprice && mergedData.specialprice > 0) {
         setShowSpecialPrice(true);
       }
+
+      // 🌟 PERBAIKAN 2: Amankan Sinkronisasi data rooftransport
+      if (mergedData.rooftransport) {
+        const roofStr = String(mergedData.rooftransport); 
+        const existingRoofs = roofStr.split(", ").map(item => item.trim());
+        const matchedPresets = existingRoofs.filter(item => presetRoofOptions.includes(item));
+        const unmatchedCustom = existingRoofs.filter(item => !presetRoofOptions.includes(item));
+
+        setSelectedRoofs(matchedPresets);
+        if (unmatchedCustom.length > 0) {
+          setCustomRoofInput(unmatchedCustom.join(", "));
+        }
+      }
+
+      // 🌟 PERBAIKAN 3: Amankan Sinkronisasi data infotainment
+      if (mergedData.infotainment) {
+        const infoStr = String(mergedData.infotainment);
+        const existingInfotainments = infoStr.split(", ").map(item => item.trim());
+        const matchedPresets = existingInfotainments.filter(item => presetInfotainmentOptions.includes(item));
+        const unmatchedCustom = existingInfotainments.filter(item => !presetInfotainmentOptions.includes(item));
+
+        setSelectedInfotainments(matchedPresets);
+        if (unmatchedCustom.length > 0) {
+          setCustomInfotainmentInput(unmatchedCustom.join(", "));
+        }
+      }
+
+      // 🌟 FIX UTAMA ERROR LOG: Mengamankan powertrainperformance dari crash split murni
+      if (mergedData.powertrainperformance) {
+        if (Array.isArray(mergedData.powertrainperformance)) {
+          setSelectedPowertrains(mergedData.powertrainperformance.filter(item => presetPowertrainOptions.includes(item)));
+          const unmatchedCustom = mergedData.powertrainperformance.filter(item => !presetPowertrainOptions.includes(item));
+          if (unmatchedCustom.length > 0) {
+            setCustomPowertrainInput(unmatchedCustom.join(", "));
+          }
+        } else {
+          const powerStr = String(mergedData.powertrainperformance);
+          const existingPowertrains = powerStr.split(", ").map(item => item.trim());
+          const matchedPresets = existingPowertrains.filter(item => presetPowertrainOptions.includes(item));
+          const unmatchedCustom = existingPowertrains.filter(item => !presetPowertrainOptions.includes(item));
+
+          setSelectedPowertrains(matchedPresets);
+          if (unmatchedCustom.length > 0) {
+            setCustomPowertrainInput(unmatchedCustom.join(", "));
+          }
+        }
+      }
     }
   }, [initialData, isEditMode]);
+
+  // Handle Perubahan Checklist Box Roof
+  const handleRoofCheckboxChange = (option) => {
+    setSelectedRoofs((prev) => {
+      if (prev.includes(option)) {
+        return prev.filter((item) => item !== option);
+      } else {
+        return [...prev, option];
+      }
+    });
+  };
+
+  // Handle Perubahan Checklist Box Infotainment
+  const handleInfotainmentCheckboxChange = (option) => {
+    setSelectedInfotainments((prev) => {
+      if (prev.includes(option)) {
+        return prev.filter((item) => item !== option);
+      } else {
+        return [...prev, option];
+      }
+    });
+  };
+
+  // Handle Perubahan Checklist Box Powertrain
+  const handlePowertrainCheckboxChange = (option) => {
+    setSelectedPowertrains((prev) => {
+      if (prev.includes(option)) {
+        return prev.filter((item) => item !== option);
+      } else {
+        return [...prev, option];
+      }
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,22 +203,45 @@ export default function AddProductForm({ initialData, onSave }) {
   };
 
   const handlePreviewFileChange = (files) => {
-    if (files.length > 0) setPreviewFile(files[0]);
+    setMessage("");
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type !== "image/webp") {
+        setMessage("Error: Gambar Preview harus berformat .webp");
+        setPreviewFile(null);
+        previewUploadKey.current += 1; 
+        return;
+      }
+      setPreviewFile(file);
+    } else {
+      setPreviewFile(null);
+    }
   };
 
   const handleDetailFilesChange = (files) => {
-    setImageFiles(files);
+    setMessage("");
+    if (files.length > 0) {
+      const hasNonWebp = files.some(file => file.type !== "image/webp");
+      if (hasNonWebp) {
+        setMessage("Error: Semua Gambar Detail wajib berformat .webp");
+        setImageFiles([]);
+        imagesUploadKey.current += 1; 
+        return;
+      }
+      setImageFiles(files);
+    } else {
+      setImageFiles([]);
+    }
   };
 
   const handlePdfFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setPdfFile(e.target.files[0]);
+    } else {
+      setPdfFile(null);
     }
   };
 
-  // -------------------------------------------------------------------
-  // 2. UPLOAD FILE KE CLOUDINARY VIA BACKEND
-  // -------------------------------------------------------------------
   const uploadFile = async (file) => {
     const data = new FormData();
     data.append('file', file);
@@ -123,10 +258,13 @@ export default function AddProductForm({ initialData, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!previewFile && !isEditMode) {
-      setMessage("Error: Preview image is required.");
-      return;
-    }
+    setMessage("");
+    
+    if (!previewFile && (!isEditMode || !formData.preview)) { setMessage("Error: Preview Image wajib diunggah."); return; }
+    if (imageFiles.length === 0 && (!isEditMode || !formData.images || formData.images.length === 0)) { setMessage("Error: Detail Images wajib diunggah minimal 1 gambar."); return; }
+    if (!pdfFile && (!isEditMode || !formData.pdf)) { setMessage("Error: Product Brochure (PDF) wajib diunggah."); return; }
+    if (!formData.exteriorcolour || formData.exteriorcolour.trim() === "") { setMessage("Error: Exterior Colour wajib diisi."); return; }
+
     setIsLoading(true);
     setMessage("Uploading files to Cloudinary...");
 
@@ -135,38 +273,49 @@ export default function AddProductForm({ initialData, onSave }) {
       let imageUrls = formData.images;
       let pdfUrl = formData.pdf;
 
-      // 1. Upload Preview Image (jika ada file baru)
-      if (previewFile) {
-        previewUrl = await uploadFile(previewFile);
-      }
-
-      // 2. Upload Detail Images (jika ada file baru)
+      if (previewFile) previewUrl = await uploadFile(previewFile);
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map(file => uploadFile(file));
         imageUrls = await Promise.all(uploadPromises);
       }
-
-      // 3. Upload PDF (jika ada file baru)
-      if (pdfFile) {
-        pdfUrl = await uploadFile(pdfFile);
-      }
+      if (pdfFile) pdfUrl = await uploadFile(pdfFile);
 
       setMessage("Files uploaded. Saving configuration...");
 
-      // 4. Kirim data JSON ke MongoDB
+      const finalRoofItems = [...selectedRoofs];
+      if (customRoofInput.trim() !== "") {
+        finalRoofItems.push(customRoofInput.trim());
+      }
+      const combinedRoofString = finalRoofItems.join(", ");
+
+      const finalInfotainmentItems = [...selectedInfotainments];
+      if (customInfotainmentInput.trim() !== "") {
+        finalInfotainmentItems.push(customInfotainmentInput.trim());
+      }
+      const combinedInfotainmentString = finalInfotainmentItems.join(", ");
+
+      const finalPowertrainItems = [...selectedPowertrains];
+      if (customPowertrainInput.trim() !== "") {
+        finalPowertrainItems.push(customPowertrainInput.trim());
+      }
+      const combinedPowertrainString = finalPowertrainItems.join(", ");
+
       const finalCarData = {
         ...formData,
         modelyear: parseInt(formData.modelyear, 10) || 0,
         price: parseInt(formData.price, 10) || 0,
-        specialprice: parseInt(formData.specialprice, 10) || 0,
+        specialprice: showSpecialPrice ? (parseInt(formData.specialprice, 10) || 0) : 0,
         preview: previewUrl,
         images: imageUrls,
         pdf: pdfUrl,
-        powertrainperformance: formData.powertrainperformance.filter(p => p.trim() !== ""),
-        exteriordesign: formData.exteriordesign.filter(p => p.trim() !== ""),
-        interiordesign: formData.interiordesign.filter(p => p.trim() !== ""),
-        comfortnusability: formData.comfortnusability.filter(p => p.trim() !== ""),
-        lightsvision: formData.lightsvision.filter(p => p.trim() !== ""),
+        rooftransport: combinedRoofString, 
+        infotainment: combinedInfotainmentString, 
+        powertrainperformance: combinedPowertrainString,
+        exteriorcolour: formData.exteriorcolour.trim(),
+        exteriordesign: formData.exteriordesign.filter(p => p.trim() !== "").join(", "),
+        interiordesign: formData.interiordesign.filter(p => p.trim() !== "").join(", "),
+        comfortnusability: formData.comfortnusability.filter(p => p.trim() !== "").join(", "),
+        lightsvision: formData.lightsvision.filter(p => p.trim() !== "").join(", "),
       };
 
       const url = isEditMode ? `http://localhost:8080/api/v1/cars/${initialData.id}` : "http://localhost:8080/api/v1/cars";
@@ -184,19 +333,30 @@ export default function AddProductForm({ initialData, onSave }) {
       }
 
       setMessage(`Sukses! Produk berhasil ${isEditMode ? "diperbarui" : "ditambahkan"}.`);
-      if (!isEditMode) {
-        setFormData(initialFormState);
-        setPreviewFile(null);
-        setImageFiles([]);
-        setPdfFile(null);
-        setShowSpecialPrice(false);
-        previewUploadKey.current += 3;
-        imagesUploadKey.current += 3;
-        pdfUploadKey.current += 3;
-      }
-      if (onSave) onSave();
+      
+      // Delay sedikit penutupan form agar sinkronisasi state induk selesai murni
+      setTimeout(() => {
+        if (!isEditMode) {
+          setFormData(initialFormState);
+          setPreviewFile(null);
+          setImageFiles([]);
+          setPdfFile(null);
+          setShowSpecialPrice(false);
+          setSelectedRoofs([]);
+          setCustomRoofInput("");
+          setSelectedInfotainments([]);
+          setCustomInfotainmentInput("");
+          setSelectedPowertrains([]);
+          setCustomPowertrainInput("");
+          previewUploadKey.current += 3;
+          imagesUploadKey.current += 3;
+          pdfUploadKey.current += 3;
+        }
+        if (onSave) onSave();
+      }, 400);
+
     } catch (error) {
-      console.error(error); // Cek console browser jika ada error
+      console.error(error); 
       const errorMessage = error.response?.data?.message || error.message;
       setMessage(`Error: ${errorMessage}`);
     } finally {
@@ -224,18 +384,30 @@ export default function AddProductForm({ initialData, onSave }) {
       </header>
       <form onSubmit={handleSubmit} className="space-y-8">
 
-        <div className="space-y-3 rounded-lg border border-porscheGray p-4">
-          <h2 className="text-xl font-bold">Preview Image</h2>
-          <ImageUpload key={previewUploadKey.current} onFilesChange={handlePreviewFileChange} initialPreviews={isEditMode && formData.preview ? [formData.preview] : []} multiple={false} />
-        </div>
-        <div className="space-y-3 rounded-lg border border-porscheGray p-4">
-          <h2 className="text-xl font-bold">Detail Images</h2>
-          <ImageUpload key={imagesUploadKey.current} onFilesChange={handleDetailFilesChange} initialPreviews={isEditMode ? formData.images : []} multiple={true} />
+        {/* PREVIEW IMAGE */}
+        <div className="space-y-3 rounded-lg border border-porscheGray p-4 bg-white">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold">Preview Image <span className="text-porscheRed">*</span></h2>
+            <p className="text-xs text-porscheGray-dark mt-1">Please upload the primary cover photo for the vehicle catalog.</p>
+          </div>
+          <ImageUpload key={previewUploadKey.current} onFilesChange={handlePreviewFileChange} initialPreviews={isEditMode && formData.preview ? [formData.preview] : []} multiple={false} accept="image/webp" />
         </div>
 
-        <div className="space-y-3 rounded-lg border border-porscheGray p-4">
-          <h2 className="text-xl font-bold">Product Brochure (PDF)</h2>
-          <p className="text-sm text-porscheGray-dark">Unggah brosur atau spesifikasi teknis dalam format PDF (opsional).</p>
+        {/* DETAIL IMAGES */}
+        <div className="space-y-3 rounded-lg border border-porscheGray p-4 bg-white">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold">Detail Images <span className="text-porscheRed">*</span></h2>
+            <p className="text-xs text-porscheGray-dark mt-1">Please upload at least one or more detail images (interior, wheels, rear view, etc.).</p>
+          </div>
+          <ImageUpload key={imagesUploadKey.current} onFilesChange={handleDetailFilesChange} initialPreviews={isEditMode ? formData.images : []} multiple={true} accept="image/webp" />
+        </div>
+
+        {/* PDF BROCHURE */}
+        <div className="space-y-3 rounded-lg border border-porscheGray p-4 bg-white">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold">Product Brochure (PDF) <span className="text-porscheRed">*</span></h2>
+            <p className="text-xs text-porscheGray-dark mt-1">Please upload the official technical specification brochure file in PDF format.</p>
+          </div>
           <input
             key={pdfUploadKey.current}
             type="file"
@@ -247,18 +419,34 @@ export default function AddProductForm({ initialData, onSave }) {
           {isEditMode && formData.pdf && <p className="text-xs text-green-600 mt-2">Current PDF: <a href={formData.pdf} target="_blank" rel="noopener noreferrer" className="underline">View</a></p>}
         </div>
 
+        {/* GRID UTAMA INPUT DATA TEKS */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div><label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name</label><input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
-          <div><label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year</label><input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
-          <div><label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr</label><input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required /></div>
-          
-          {/* UI HARGA */}
+          {/* VEHICLE NAME */}
           <div>
-            <label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR)</label>
-            <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" required />
+            <label htmlFor="vehicle" className="mb-2 block text-sm font-bold text-porscheGray-dark">Vehicle Name <span className="text-porscheRed">*</span></label>
+            <input type="text" id="vehicle" name="vehicle" value={formData.vehicle} onChange={handleChange} placeholder="e.g. 718 Cayman, Macan EV" className="w-full rounded-lg border border-porscheGray p-3 bg-white" required />
           </div>
 
-          <div className="flex items-center gap-2 self-end">
+          {/* MODEL YEAR */}
+          <div>
+            <label htmlFor="modelyear" className="mb-2 block text-sm font-bold text-porscheGray-dark">Model Year <span className="text-porscheRed">*</span></label>
+            <input type="number" id="modelyear" name="modelyear" value={formData.modelyear} onChange={handleChange} placeholder="e.g. 2025" className="w-full rounded-lg border border-porscheGray p-3 bg-white" required />
+          </div>
+
+          {/* COMM NUMBER */}
+          <div>
+            <label htmlFor="commnr" className="mb-2 block text-sm font-bold text-porscheGray-dark">Comm. Nr <span className="text-porscheRed">*</span></label>
+            <input type="text" id="commnr" name="commnr" value={formData.commnr} onChange={handleChange} placeholder="e.g. R04425" className="w-full rounded-lg border border-porscheGray p-3 bg-white" required />
+          </div>
+          
+          {/* BASE PRICE */}
+          <div>
+            <label htmlFor="price" className="mb-2 block text-sm font-bold text-porscheGray-dark">Price (IDR) <span className="text-porscheRed">*</span></label>
+            <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} placeholder="e.g. 2500000000" className="w-full rounded-lg border border-porscheGray p-3 bg-white" required />
+          </div>
+
+          {/* TOGGLE SPECIAL PRICE */}
+          <div className="flex items-center gap-2 self-end mb-4 text-porscheBlack">
             <input
               type="checkbox"
               id="specialPriceToggle"
@@ -266,49 +454,158 @@ export default function AddProductForm({ initialData, onSave }) {
               onChange={(e) => setShowSpecialPrice(e.target.checked)}
               className="h-5 w-5 rounded border-porscheGray text-porscheRed focus:ring-porscheRed"
             />
-            <label htmlFor="specialPriceToggle" className="text-sm font-bold text-porscheGray-dark">
+            <label htmlFor="specialPriceToggle" className="text-sm font-bold text-porscheGray-dark cursor-pointer select-none">
               Add Special Price
             </label>
           </div>
 
+          {/* INPUT FOR SPECIAL PRICE */}
           {showSpecialPrice && (
             <div>
               <label htmlFor="specialprice" className="mb-2 block text-sm font-bold text-porscheRed">Special Price (IDR)</label>
-              <input type="number" id="specialprice" name="specialprice" value={formData.specialprice} onChange={handleChange} className="w-full rounded-lg border border-porscheRed p-3 focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50" required />
+              <input type="number" id="specialprice" name="specialprice" value={formData.specialprice} onChange={handleChange} placeholder="Enter special promo price amount" className="w-full rounded-lg border border-porscheRed p-3 bg-white focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50" required />
             </div>
           )}
-          {/* AKHIR UI HARGA */}
 
-          <div><label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour</label><input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-          <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-          <div><label htmlFor="wheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheels</label><input type="text" id="wheels" name="wheels" value={formData.wheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-          <div><label htmlFor="seats" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seats</label><input type="text" id="seats" name="seats" value={formData.seats} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          {/* EXTERIOR COLOUR */}
+          <div>
+            <label htmlFor="exteriorcolour" className="mb-2 block text-sm font-bold text-porscheGray-dark">Exterior Colour <span className="text-porscheRed">*</span></label>
+            <input type="text" id="exteriorcolour" name="exteriorcolour" value={formData.exteriorcolour} onChange={handleChange} placeholder="e.g. Carrara White Metallic, Shark Blue" className="w-full rounded-lg border border-porscheGray p-3 bg-white" required />
+          </div>
+
+          {/* FIELD OPSIONAL LAINNYA */}
+          <div><label htmlFor="interiorcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Interior Colours & Materials</label><input type="text" id="interiorcolours" name="interiorcolours" value={formData.interiorcolours} onChange={handleChange} placeholder="e.g. Black leather interior with Race-Tex" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
+          <div><label htmlFor="wheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheels</label><input type="text" id="wheels" name="wheels" value={formData.wheels} onChange={handleChange} placeholder="e.g. 20-inch Carrera S wheels" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
+          <div><label htmlFor="seats" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seats</label><input type="text" id="seats" name="seats" value={formData.seats} onChange={handleChange} placeholder="e.g. Comfort seats front (14-way, electric)" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
         </div>
-        <div><label htmlFor="rooftransport" className="mb-2 block text-sm font-bold text-porscheGray-dark">Roof Transport System</label><input type="text" id="rooftransport" name="rooftransport" value={formData.rooftransport} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-        <DynamicSection title="Powertrain & Performance Features" fieldName="powertrainperformance" />
-        <div><label htmlFor="infotainment" className="mb-2 block text-sm font-bold text-porscheGray-dark">Infotainment</label><textarea id="infotainment" name="infotainment" value={formData.infotainment} onChange={handleChange} rows="4" className="w-full rounded-lg border border-porscheGray p-3"></textarea></div>
 
-        <div className="space-y-8 rounded-lg border border-porscheGray p-6">
+        {/* --- ROOF & TRANSPORT SYSTEM --- */}
+        <div className="rounded-lg border border-porscheGray p-4 bg-white space-y-4">
+          <label className="block text-sm font-bold text-porscheGray-dark">
+            Roof & Transport Systems
+          </label>
+          
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 bg-porscheGray-light/40 p-3 rounded-lg border border-dashed border-porscheGray">
+            {presetRoofOptions.map((option, idx) => (
+              <label key={idx} className="flex items-center gap-3 p-2 hover:bg-porscheGray-light rounded-md cursor-pointer transition select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedRoofs.includes(option)}
+                  onChange={() => handleRoofCheckboxChange(option)}
+                  className="h-5 w-5 rounded border-porscheGray text-porscheRed focus:ring-porscheRed"
+                />
+                <span className="text-sm font-medium text-porscheBlack">{option}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="customRoofInput" className="block text-xs font-bold text-porscheGray-dark uppercase tracking-wider">
+              Other / Custom Roof Option
+            </label>
+            <input
+              type="text"
+              id="customRoofInput"
+              value={customRoofInput}
+              onChange={(e) => setCustomRoofInput(e.target.value)}
+              className="w-full rounded-lg border border-porscheGray p-3 text-sm focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50 transition bg-white"
+            />
+          </div>
+        </div>
+
+        {/* --- POWERTRAIN & PERFORMANCE --- */}
+        <div className="rounded-lg border border-porscheGray p-4 bg-white space-y-4">
+          <label className="block text-sm font-bold text-porscheGray-dark">
+            Powertrain & Performance Features
+          </label>
+          
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 bg-porscheGray-light/40 p-3 rounded-lg border border-dashed border-porscheGray">
+            {presetPowertrainOptions.map((option, idx) => (
+              <label key={idx} className="flex items-center gap-3 p-2 hover:bg-porscheGray-light rounded-md cursor-pointer transition select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedPowertrains.includes(option)}
+                  onChange={() => handlePowertrainCheckboxChange(option)}
+                  className="h-5 w-5 rounded border-porscheGray text-porscheRed focus:ring-porscheRed"
+                />
+                <span className="text-sm font-medium text-porscheBlack">{option}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="customPowertrainInput" className="block text-xs font-bold text-porscheGray-dark uppercase tracking-wider">
+              Other / Custom Powertrain Option
+            </label>
+            <input
+              type="text"
+              id="customPowertrainInput"
+              value={customPowertrainInput}
+              onChange={(e) => setCustomPowertrainInput(e.target.value)}
+              className="w-full rounded-lg border border-porscheGray p-3 text-sm focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50 transition bg-white"
+            />
+          </div>
+        </div>
+        
+        {/* --- INFOTAINMENT --- */}
+        <div className="rounded-lg border border-porscheGray p-4 bg-white space-y-4">
+          <label className="block text-sm font-bold text-porscheGray-dark">
+            Infotainment
+          </label>
+          
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 bg-porscheGray-light/40 p-3 rounded-lg border border-dashed border-porscheGray">
+            {presetInfotainmentOptions.map((option, idx) => (
+              <label key={idx} className="flex items-center gap-3 p-2 hover:bg-porscheGray-light rounded-md cursor-pointer transition select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedInfotainments.includes(option)}
+                  onChange={() => handleInfotainmentCheckboxChange(option)}
+                  className="h-5 w-5 rounded border-porscheGray text-porscheRed focus:ring-porscheRed"
+                />
+                <span className="text-sm font-medium text-porscheBlack">{option}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="customInfotainmentInput" className="block text-xs font-bold text-porscheGray-dark uppercase tracking-wider">
+              Other / Custom Infotainment Option
+            </label>
+            <input
+              type="text"
+              id="customInfotainmentInput"
+              value={customInfotainmentInput}
+              onChange={(e) => setCustomInfotainmentInput(e.target.value)}
+              className="w-full rounded-lg border border-porscheGray p-3 text-sm focus:border-porscheRed focus:outline-none focus:ring-2 focus:ring-porscheRed/50 transition bg-white"
+            />
+          </div>
+        </div>
+
+        {/* LOGIKA STRUKTUR TAMBAHAN AKSESORIS */}
+        <div className="space-y-8 rounded-lg border border-porscheGray p-6 bg-white">
           <h2 className="text-2xl font-bold text-center text-porscheBlack">Additional Configuration Details</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div><label htmlFor="paintedwheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Painted Wheels</label><input type="text" id="paintedwheels" name="paintedwheels" value={formData.paintedwheels} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-            <div><label htmlFor="letteringdecals" className="mb-2 block text-sm font-bold text-porscheGray-dark">Lettering & Decals</label><input type="text" id="letteringdecals" name="letteringdecals" value={formData.letteringdecals} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="paintedwheels" className="mb-2 block text-sm font-bold text-porscheGray-dark">Painted Wheels</label><input type="text" id="paintedwheels" name="paintedwheels" value={formData.paintedwheels} onChange={handleChange} placeholder="e.g. Wheels painted in Satin Black" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
+            <div><label htmlFor="letteringdecals" className="mb-2 block text-sm font-bold text-porscheGray-dark">Lettering & Decals</label><input type="text" id="letteringdecals" name="letteringdecals" value={formData.letteringdecals} onChange={handleChange} placeholder="e.g. Decorative side logo 'PORSCHE' in Black" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-            <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="seatbeltsseatdesign" className="mb-2 block text-sm font-bold text-porscheGray-dark">Seatbelts & Seat Design</label><input type="text" id="seatbeltsseatdesign" name="seatbeltsseatdesign" value={formData.seatbeltsseatdesign} onChange={handleChange} placeholder="e.g. Seat belts in Guards Red" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
+            <div><label htmlFor="assistancesystems" className="mb-2 block text-sm font-bold text-porscheGray-dark">Assistance Systems</label><input type="text" id="assistancesystems" name="assistancesystems" value={formData.assistancesystems} onChange={handleChange} placeholder="e.g. ParkAssist (rear) with reversing camera" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
           </div>
           <DynamicSection title="Exterior Design" fieldName="exteriordesign" />
           <DynamicSection title="Interior Design" fieldName="interiordesign" />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div><label htmlFor="wheelcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Colours</label><input type="text" id="wheelcolours" name="wheelcolours" value={formData.wheelcolours} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
-            <div><label htmlFor="wheelaccesories" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Accesories</label><input type="text" id="wheelaccesories" name="wheelaccesories" value={formData.wheelaccesories} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+            <div><label htmlFor="wheelcolours" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Colours</label><input type="text" id="wheelcolours" name="wheelcolours" value={formData.wheelcolours} onChange={handleChange} placeholder="e.g Wheels painted in White " className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
+            <div><label htmlFor="wheelaccesories" className="mb-2 block text-sm font-bold text-porscheGray-dark">Wheel Accessories</label><input type="text" id="wheelaccesories" name="wheelaccesories" value={formData.wheelaccesories} onChange={handleChange} placeholder="e.g. Tyre Mobility Set" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
           </div>
-          <DynamicSection title="Comfort & Usability" fieldName="comfortnusability" />
-          <DynamicSection title="Lights & Vision" fieldName="lightsvision" />
-          <div><label htmlFor="equipmentpackages" className="mb-2 block text-sm font-bold text-porscheGray-dark">Equipment Packages</label><input type="text" id="equipmentpackages" name="equipmentpackages" value={formData.equipmentpackages} onChange={handleChange} className="w-full rounded-lg border border-porscheGray p-3" /></div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <DynamicSection title="Comfort & Usability" fieldName="comfortnusability" />
+            <DynamicSection title="Lights & Vision" fieldName="lightsvision" />
+          </div>
+          <div><label htmlFor="equipmentpackages" className="mb-2 block text-sm font-bold text-porscheGray-dark">Equipment Packages</label><input type="text" id="equipmentpackages" name="equipmentpackages" value={formData.equipmentpackages} onChange={handleChange} placeholder="e.g. Weissach package" className="w-full rounded-lg border border-porscheGray p-3 bg-white" /></div>
         </div>
 
+        {/* SISI FOOTER AKSI TOMBOL */}
         <div className="border-t border-porscheGray pt-6">
           <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-porscheRed py-4 text-lg font-bold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-500">
             {isLoading ? "Menyimpan..." : isEditMode ? "Update Configuration" : "Save Configuration"}

@@ -1,6 +1,6 @@
 import React from 'react';
 
-// Komponen untuk setiap tombol navigasi
+// Komponen untuk setiap tombol navigasi (Kembali ke Desain Awal Kamu)
 const NavButton = ({ children, onClick, isActive }) => (
   <button
     onClick={onClick}
@@ -24,7 +24,8 @@ export default function Header({ page, setPage }) {
   };
 
   return (
-    <header className="w-full backdrop-blur-md p-8 rounded-t-xl border-b border-gray-100/20">
+    /* PERUBAHAN DI SINI: bg-gray-50/90 membuat boks background header ini menjadi abu-abu yang jauh lebih terang, bersih, dan memantulkan efek blur */
+    <header className="w-full bg-gray-50/90 backdrop-blur-md p-8 rounded-t-xl border-b border-gray-200/50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Kolom Kiri: Logo Porsche */}
@@ -32,25 +33,16 @@ export default function Header({ page, setPage }) {
           <img 
             src="/images/Porsche_wordmark_black_rgb.png"
             alt="Porsche Logo" 
-            className="h-5 md:h-6" // Sedikit lebih besar agar tegas
+            className="h-5 md:h-6" 
           />
         </div>
 
-        {/* Kolom Kanan: Navigasi dengan jarak yang lebih lega (space-x-12) */}
-        <nav className="flex items-center space-x-6 lg:space-x-12">
-          {/* Tombol CSV disembunyikan sepenuhnya dari aliran dokumen */}
-          {/* <NavButton onClick={() => changePage('baca')} isActive={page === 'baca'}>
-            View CSV
-          </NavButton>
-          <NavButton onClick={() => changePage('banding')} isActive={page === 'banding'}>
-            Compare CSV
-          </NavButton> 
-          */}
-
-          <NavButton onClick={() => changePage('viewcatalogue')} isActive={page === 'viewcatalogue'}>
+        {/* Kolom Kanan: Navigasi */}
+        <nav className="flex items-center space-x-4 lg:space-x-6">
+          <NavButton onClick={() => changePage('viewcatalogue')} isActive={page === 'viewcatalogue' || page === 'detail' || page === 'compare'}>
             View Catalogue
           </NavButton>
-          <NavButton onClick={() => changePage('manageproducts')} isActive={page === 'manageproducts'}>
+          <NavButton onClick={() => changePage('manageproducts')} isActive={page === 'manageproducts' || page === 'editproduct' || page === 'archive'}>
             Manage Products
           </NavButton>
           <NavButton onClick={() => changePage('addproduct')} isActive={page === 'addproduct'}>
